@@ -2,5 +2,5 @@
 
 There is 
 - src folder with source files put in the folders 
-- folders of lab works with jar-archive
+- folders for lab works with jar-archive
 

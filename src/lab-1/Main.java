@@ -1,6 +1,7 @@
 package com.company;
 
 import java.util.Arrays;
+import java.text.DecimalFormat;
 
 public class Main {
 
@@ -47,7 +48,12 @@ public class Main {
                                         )
                     );
                 }
-                System.out.printf("%.2f ", a2[i][j]);
+
+                String res = String.format("%.2f", a2[i][j]);
+                if( a2[i][j]>=0){
+                    res = " " + res;
+                }
+                System.out.print(res+" ");
 
                 
             }

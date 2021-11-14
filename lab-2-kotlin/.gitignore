@@ -1,4 +1,3 @@
-out/
 ### Java template
 # Compiled class file
 *.class
@@ -13,7 +12,7 @@ out/
 .mtj.tmp/
 
 # Package Files #
-#*.jar
+# *.jar
 *.war
 *.nar
 *.ear
@@ -38,7 +37,7 @@ hs_err_pid*
 .mtj.tmp/
 
 # Package Files #
-#*.jar
+# *.jar
 *.war
 *.nar
 *.ear
@@ -49,5 +48,7 @@ hs_err_pid*
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+lib/
+out/production
+#!out/*.jar
 *.iml
-!out/*jar

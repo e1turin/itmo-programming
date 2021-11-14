@@ -1,8 +1,8 @@
 .idea/
-*/lib
-**.iml
-lab-2/out
-lab-2-kotlin/out
-!lab-2/out/artifacts/lab_2_jar/*.jar
-!lab-2-kotlin/out/artifacts/lab-2/*.jar
+#*/lib/
+#*.iml
+#lab-2/out
+#lab-2-kotlin/out
+#!lab-2/out/artifacts/lab_2_jar/*.jar
+#!lab-2-kotlin/out/artifacts/lab-2/*.jar
 

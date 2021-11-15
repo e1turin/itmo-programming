@@ -1,6 +1,7 @@
 package moves;
 
 import ru.ifmo.se.pokemon.*;
+
 public class EnergyBall extends SpecialMove{
     public EnergyBall(){
         super(Type.GRASS, 90, 100);

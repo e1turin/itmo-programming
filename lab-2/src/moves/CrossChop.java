@@ -1,5 +1,7 @@
 package moves;
+
 import ru.ifmo.se.pokemon.*;
+
 public class CrossChop extends PhysicalMove{
     public CrossChop(){
         super(Type.FIGHTING, 100, 80);

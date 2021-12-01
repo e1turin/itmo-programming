@@ -1,0 +1,165 @@
+@startuml
+'https://plantuml.com/class-diagram
+' ===================
+' -	private
+' #	protected
+' ~	package private
+' +	public
+' ===================
+
+enum Color {
+    RED
+    WHITE
+    UNDEFINED
+}
+enum Feeling {
+    PAIN
+}
+class Action {
+    .. fields ..
+    - {field} String description
+    - {field} Quality quality
+}
+
+interface Paintable {
+    + {method} void paint(Color)
+}
+interface Closable {
+    + {method} void close()
+}
+
+class Sound {
+    .. fields ..
+    - {field} String name
+    .. methods ..
+    + {method} void sound()
+}
+
+class Quality {
+    .. fields ..
+    - {field} String description
+}
+
+abstract class Thing {
+    .. fields ..
+    - {field} String name
+    - {field} Sound sound
+    - {field} Quality quality
+    - {field} Color color
+    .. methods ..
+    + {method} void toSound()
+    + {method} Action toAct(String) /' name '/
+                \t{quality}
+                }
+
+Thing <-- Action
+Paintable <|.. Thing
+Thing *-- Quality
+Thing *-- Sound
+
+class Rocket
+    Rocket --|> Thing
+class Shots {
+    {field} sound = "Shot"
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Shots -|> Thing
+class Bullets {
+    {field} sound = "Whistling"
+    {field} quality = "Harmful"
+    {field} color = Color.UNDEFINED
+}
+    Bullets -|> Thing
+    'Shots .. Bullets
+class Something {
+    {field} /' ? '/
+}
+    Something --|> Thing
+class ShirtSleeve {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.WHITE
+}
+    Thing <|- ShirtSleeve
+class Bloodtain {
+    color = Color.RED
+}
+    Thing <|-- Bloodtain
+class Door {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Thing <|- Door
+    Door ..|> Closable
+
+abstract class Alive {
+    .. fields ..
+    - {field} String name
+    - {field} Decision decision
+    .. methods ..
+    + {method} Action toLet(Alive) /' persons '/
+    + {method} Action toClimbInto(Thing) /' thing '/
+    + {method} void toFeel(Feeling | Action) /' feeling | action '/
+                \t{face}
+    + {method} void toDecide(String) /' decision '/
+    + {method} String toSee(Action) /' action '/
+}
+
+class Decision {
+    - {field} decison
+}
+Alive *- Decision
+
+
+class Person {
+    .. fields ..
+    - {field} Face face
+    .. methods ..
+    + {method} Action toDragIn(Person)
+    + {method} Action toClose(Thing)
+    + {method} Action toReshapeFace(Feeling)
+}
+Thing --> Alive
+Action --> Alive
+Person .|> Alive
+-class Face {
+    .. fields ..
+    - {field} Set<Feeling> feelings /'ordered set'/
+    .. methods ..
+    + {method} Action toReshape(Feeling) /' feeling '/
+    '/ + {method} String getEmotion() '/
+}
+Face -{ Person
+Face -* Person
+'Face .. Action
+' Feeling .. Face
+' Feeling .. Person
+'Person .. Action
+class Shorty {
+    .. fields ..
+    .. methods ..
+}
+Alive <|.. Shorty
+
+entity theFucsia
+    Person <-- theFucsia
+entity theSeledochka
+    Person <-- theSeledochka
+entity theKlepka
+    Person <-- theKlepka
+entity theShortyes
+'theShortys = class {list[]...} ???
+    Shorty <- theShortyes
+entity theSmarty {
+    decison = "last on
+            \t'Rocket' board"
+}
+    theSmarty --> Person
+
+
+
+
+
+@enduml

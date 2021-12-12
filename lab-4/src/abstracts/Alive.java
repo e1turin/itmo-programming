@@ -1,6 +1,7 @@
 package abstracts;
 
 import com.company.Action;
+import com.company.Command;
 import com.company.Decision;
 import com.company.Quality;
 import types.Feeling;
@@ -43,6 +44,24 @@ public abstract class Alive {
     public String toSee(Action action) {
         System.out.println(name + " увидел(а) как " + action.getDescription());
         return name + "увидел(а)" + action.getDescription();
+    }
+
+    public Action toShout(String cmd){
+        System.out.println(name+" скомандавал(а) "+cmd);
+        return new Action(name+" скомандавал(а) "+cmd, new Quality(
+                "Команда "+cmd));
+    }
+
+    public Action toTake(Thing thing){
+        System.out.println(name+" взял(а) "+thing.getName());
+        return new Action(name+" взял(а) "+thing.getName(),
+                new Quality("Взяли "+thing.getName()));
+    }
+
+    public Action toHear(Action action){
+        System.out.println(name+" услышал(а), как "+action.getDescription());
+        return new Action(name+" услышал(а), как "+action.getDescription(),
+                new Quality("Услышали: "+action.getDescription()));
     }
 
     public String getName() {

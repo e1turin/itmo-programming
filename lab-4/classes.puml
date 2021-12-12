@@ -7,6 +7,9 @@
 ' +	public
 ' ===================
 
+class Checked
+class Unchecked
+
 enum Color {
     RED
     WHITE
@@ -36,6 +39,11 @@ class Sound {
 }
 
 class Quality {
+    .. fields ..
+    - {field} String description
+}
+
+class Command {
     .. fields ..
     - {field} String description
 }
@@ -72,6 +80,9 @@ class Bullets {
 }
     Bullets -|> Thing
     'Shots .. Bullets
+entity bullet
+    bullet --> Bullets
+
 class Something {
     {field} /' ? '/
 }
@@ -93,6 +104,18 @@ class Door {
 }
     Thing <|- Door
     Door ..|> Closable
+class Shotguns {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Shotguns -|> Thing
+class Healpack {
+    {field} sound = ""
+    {field} quality = "heal"
+    {field} color = Color.UNDEFINED
+}
+    Healpack --|> Thing
 
 abstract class Alive {
     .. fields ..
@@ -105,12 +128,15 @@ abstract class Alive {
                 \t{face}
     + {method} void toDecide(String) /' decision '/
     + {method} String toSee(Action) /' action '/
+    + {method} Action toShout(Command)
+    + {method} Action toTake(Thing)
+    + {method} Action toHear(Action)
 }
 
 class Decision {
     - {field} decison
 }
-Alive *- Decision
+Alive *-- Decision
 
 
 class Person {
@@ -120,10 +146,15 @@ class Person {
     + {method} Action toDragIn(Person)
     + {method} Action toClose(Thing)
     + {method} Action toReshapeFace(Feeling)
+    + {method} Action toCommandTo(Alive, Command)
+    + {method} Action toHeal(Alive)
+    + {method} Action toLookAt(Thing)
+    + {method} Action toThrowsToWith(Alive, Thing)
 }
+Command --> Person
 Thing --> Alive
 Action --> Alive
-Person .|> Alive
+Person -|> Alive
 -class Face {
     .. fields ..
     - {field} Set<Feeling> feelings /'ordered set'/
@@ -141,7 +172,15 @@ class Shorty {
     .. fields ..
     .. methods ..
 }
-Alive <|.. Shorty
+Alive <|-- Shorty
+
+class Policeman {
+    .. fields ..
+    .. methods ..
+    +{method} Action toShoot()
+}
+Alive <|- Policeman
+
 
 entity theFucsia
     Person <-- theFucsia
@@ -157,6 +196,12 @@ entity theSmarty {
             \t'Rocket' board"
 }
     theSmarty --> Person
+entity theRigle
+    Policeman <- theRigle
+entity thePolicemen
+    Policeman <-- thePolicemen
+entity theDocPilulckin
+    theDocPilulckin --> Person
 
 
 

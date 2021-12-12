@@ -1,6 +1,9 @@
 package com.company;
 
+import abstracts.Closable;
+import abstracts.Thing;
 import com.company.things.*;
+import types.Color;
 import types.Feeling;
 
 public class Main {
@@ -19,8 +22,21 @@ public class Main {
         Person theSmarty = new Person("Знайка");
         ShirtSleev shirtSleev = new ShirtSleev(new Sound(""), new Quality(""));
         Bloodstain bloodstain = new Bloodstain(new Sound(""), new Quality(""));
-        Door door = new Door(new Sound("Закрываение"), new Quality(""));
+//        Door door = new Door(new Sound("Закрываение"), new Quality(""));
+        Policeman theRigle = new Policeman("Ригль");
+        Person theDocPilulckin = new Person("Доктор Пилюлькин");
+        Healpack healpack = new Healpack(new Sound(""), new Quality(""));
+        Bullets bullet = new Bullets(new Sound("свист пули"), new Quality(""));
+        Policeman thePolicemen = new Policeman("Полицейские");
 
+
+
+
+        theSmarty.toSee(theRigle.toShout("Полицейские, ружья на изготовку"));
+        theSmarty.toCommandTo(theShortyes, new Command("забираться в ракету"));
+
+        //
+        //
         theSmarty.toDecide("сесть в ракету");
 
         theShortyes.toLet(theFucsia);
@@ -38,16 +54,23 @@ public class Main {
 
         theSmarty.toDragIn(theKlepka);
         System.out.print("не теряя ни секунды ");
-        theSmarty.toClose(door);
+        theSmarty.toClose(new Closable() {
+            @Override
+            public void close() {
+                System.out.println("Закрыли дверь");
+            }
+        }); //door);
+        //
+        //
 
-
-
-
-
-
-
-
-
+        theDocPilulckin.toSee(act);
+        theDocPilulckin.toThrowsToWith(theKlepka, healpack);
+        theDocPilulckin.toSee(new Action("Пуля прошла навылет",
+                new Quality("Не смертельно")));
+        theDocPilulckin.toHeal(theKlepka);
+        theKlepka.toFeel(Feeling.PAIN);
+        theSmarty.toHear(new Action(bullets.getName()+" барабанят по оболочке "+rocket.getName(), new Quality("Опасный звук")));
+        thePolicemen.toShoot();
 
 
     }

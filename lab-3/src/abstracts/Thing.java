@@ -14,6 +14,7 @@ public abstract class Thing implements Paintable {
     protected Quality quality;
     protected Color color;
 
+
     public Thing(String name, Sound sound, Quality quality, Color color) {
         this.name = name;
         this.sound = sound;

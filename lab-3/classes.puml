@@ -131,7 +131,7 @@ Person .|> Alive
     + {method} Action toReshape(Feeling) /' feeling '/
     '/ + {method} String getEmotion() '/
 }
-Face -{ Person
+Face -+ Person
 Face -* Person
 'Face .. Action
 ' Feeling .. Face

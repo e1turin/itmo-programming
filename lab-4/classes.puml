@@ -7,8 +7,8 @@
 ' +	public
 ' ===================
 
-class Checked
-class Unchecked
+class IncorrectFileNameException
+class NogivenNameException
 
 enum Color {
     RED

@@ -14,7 +14,15 @@ public class Door extends Thing implements Closable {
 
     @Override
     public void close() {
+        class Knock extends Sound {
+            public Knock(){
+                super("Стук");
+            }
+        }
+
+        Knock knock = new Knock();
+
         System.out.print("Дверь " + color + "цвета закрылась. ");
-        sound.sound();
+        knock.sound();
     }
 }

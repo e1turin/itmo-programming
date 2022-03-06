@@ -8,7 +8,7 @@ Class Coordinates {
 class Label {
     - long bands
 }
-enum MusicGanre {
+enum MusicGenre {
     PROGRESSIVE_ROCK
     RAP
     BLUES
@@ -26,65 +26,100 @@ class MusicBand {
     - Label label
 }
 
-Coordinates --* MusicBand::coordinates
+Coordinates -u-* MusicBand::coordinates
 Label -up-* MusicBand::label
-MusicGanre --* MusicBand::genre
+MusicGenre -u-* MusicBand::genre
 
 class MusicBandStorage #AAFFAA {
-    - LinkedHashSet<MusicBand> storage
-    - {auto} sort()
+    + final String name
+    - final LinkedHashSet<MusicBand> storage
+    + LocalDate creationDate
+    + int size
+    + int lastElementId
+    + int nextElementId()
+    + void appendData(Collection<MusicBand>)
+    + void makeIndices()
+    + Array<MusicBand> toArray()
+    + List<MusicBand> toList()
+    + void add(MusicBand)
+    + void clear()
+    + boolean hasElementWithID(int)
+    + int count((MusicBand)->boolean)
+    + void filter((MusicBand)->boolean)
+    + boolean isEmpty()
+    + void deleteWithID(int)
+    + MusicBand getMax()
+    + String getInfo()
 
 }
 
 MusicBand -* MusicBandStorage
+class StorageManager #AAFFAA {
+    - MusicBandStorage storage
+    - LinkedList<String> history
+    - IOStream stdIOStream
+    - MutableMap<String, Command> commands
+    - Stack<File> scriptCallStack
+    - int scriptCallStackLimit
+    + {static} enum TaskType
+    ---
+    + void loadData(File)
+    - void saveDataToFile(File)
+    + boolean validateCmd(String)
+    - Message executeCmd(String, String, IOStream)
+    - Message giveResponseToCmd(String, Response, IOStream
+    - addCmdToHistory(String)
+    - boolean callstackHasScript(Stack<File>, File)
+    - void clearStorage()
+    + void setCreationDate(LocalDate)
+    + loop(IOStream)
+    + Message doTask(Request, IOStream)
+    --tasks--
+    - Message exitTask(Request,IOStream)
+    - Message clearCollectionTask(Request, IOStream)
+    - Message giveHelpTask(Request, IOStream)
+    - Message saveDataTask(Request, IOStream)
+    - Message execScriptTask(Request, IOStream)
+
+}
+
+enum TaskType {
+    + NONE
+    + EXIT
+    + GIVE_HELP
+    + LOAD_DATA
+    + CLEAR_COLLECTION
+    + GIVE_HISTORY
+    + EXEC_SCRIPT
+    + SAVE_DATA
+}
+
+TaskType -d-o StorageManager::enum
+package commands {
 abstract class Command {
-    - MusicBandStorage target
     - String cmdName {get}
     - String description {get}
 
-    ~ void exec()
-}
-'interface ICommand {
-'}
-object commands{
-    + help()
-    + info()
-    + show()
-    + add(MusicBand)
-    + update_id(int id)
-    + remove_by_id(int id)
-    + clear()
-    + save()
-    + execute_script(String fileName)
-    + exit()
-    + add_if_max(MusicBand)
-    + remove_greater(MusicBand)
-    + history() //last 6
-    + average_of_number_of_participants()
-    + count_less_than_albums_count(long albumsCount)
-    + print_ascending()
-    + load()
-    + ...()
+    ~ {abstract}Message exec(String, MusicBandStorage, IOStream)
 }
 
-commands -|> Command
-
-
-class StorageManager #AAFFAA {
-    - Queue history
-    - Map<String, Command> commands
-    - read() - ????
-    + Bool validateCmd(String)
-    + void executeCmd(Message)
+interface Requestable{
+    + exec(Request,IOStream,MusicBandStorage)
 }
+Requestable .. Command
+}
+
+
+
+
 
 class JavaDoc << (J, #FFCC99)>> #FFDD99
-Main .up.> JavaDoc
+Main .u.> JavaDoc
 
-class com.fasterxml.jackson.module.kotlin.jacksonObjectMapper << (J, #FFCC99)>> #FFDD99
-class com.fasterxml.jackson.module.kotlin.readValue << (J, #FFCC99)>> #FFDD99
-StorageManager o-- com.fasterxml.jackson.module.kotlin.readValue
-StorageManager o-- com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+class com.fasterxml.jackson.databind.ObjectMapper << (J, #FFCC99)>> #FFDD99
+class com.fasterxml.jackson.databind.readValue << (J, #FFCC99)>> #FFDD99
+StorageManager o-- com.fasterxml.jackson.databind.readValue
+StorageManager o-- com.fasterxml.jackson.databind.ObjectMapper
 
 class java.io.InputStreamReader << (C, #EEAAAA) >> #EFCCCC
 class java.io.PrintWriter << (C, #EEAAAA) >> #EFCCCC
@@ -95,25 +130,88 @@ StorageManager o-- java.io.PrintWriter
 class java.util.LinkedHashSet << (C, #EEAAAA) >> #EFCCCC
 MusicBandStorage *-up- java.util.LinkedHashSet
 
-class IOStream << (C, #EEEE99)>> #FFEE99{
-    + void write()
-    + void writeln()
-    + boolean yesAnswer()
-    + MusicBand readMusicBand()
-    + String readString()
-    + int readInt()
-    + ...()
+package util {
+    IOStream -l-o StorageManager
+    interface IDateValidator {
+        + boolean isValid(String)
+    }
+    class DateValidatorUsingDateFormat {
+        - final String dateFormat
+    }
+    DateValidatorUsingDateFormat --|> IDateValidator
+    class IOStream << (C, #EEEE99)>> #FFEE99{
+        + final Writer writer
+        + boolean interactive
+        - final Scanner scanner
+        + void write(String)
+        + void writeln(String)
+        + void writetermsep(String)
+        + <T> T termInput(String, String, ()->T)
+        + <T> T termInputUntil(
+        String, String, String,(T)->boolean, ()->T
+        )
+        + booleanq canRead()
+        + boolean yesAnswer()
+        + String read()
+        + String readBlankOrNull()
+        + String readLine()
+        + Integer readIntOrNull()
+        + Long readLongOrNull()
+        + Double readDoubleOrNull()
+        - Coordinates readCoordinates()
+        - MusicGenre readMusicGenre()
+        - Label readLable()
+        - Date readDate(String, String)
+        - Date readEstablishmentDate(String, String)
+        + MusicBand readMusicBand()
+        + String readFileName(String)
+        + Pair<String,String> readCmdWithArg()
+    }
 }
-Command o- IOStream
-IOStream --o StorageManager
-commands::load o- IOStream
-commands::save o- IOStream
-
 Command --o StorageManager
 '(Command,StorageManager) - ICommand
 
 MusicBandStorage -* StorageManager
 
-StorageManager <-> Main
+StorageManager -up-* Main
+
+package containers{
+    abstract class Message{
+        + final String sender
+        + final String content
+    }
+    enum ResponseType{
+        + NONE
+        + TASK_COMPLETED
+        + TASK_FAILED
+    }
+    class Response {
+        + final ResponseType type
+        + Object arg
+    }
+    ResponseType -l-* Response
+    Response -u-|> Message
+    enum RequestType{
+        + DO_TASK
+    }
+    class Request {
+        + final RequestType type
+        + final StorageManager.TaskType taskType
+        + final Object arg
+    }
+    RequestType -l-* Request
+    Request -l-|> Message
+}
+
+package exceptions {
+    class CallstackOverflowException <<X, #FF9999>> #FFCC99
+    class ExitScriptException <<X, #FF9999>> #FFCC99
+    class InvalidCmdArgumentException <<X, #FF9999>> #FFCC99
+    class NonexistentCommandException <<X, #FF9999>> #FFCC99
+    class NotRequestableCommandException <<X, #FF9999>> #FFCC99
+    class RecursiveScriptException <<X, #FF9999>> #FFCC99
+}
+
+util -[hidden]r-> containers
 
 @enduml

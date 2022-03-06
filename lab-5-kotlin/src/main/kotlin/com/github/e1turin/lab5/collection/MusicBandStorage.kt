@@ -28,6 +28,7 @@ class MusicBandStorage(val name: String) {
         for(it in data){
             it.setId(id++)
         }
+        lastElementId = id
     }
 
     fun toArray(): Array<MusicBand> {

@@ -20,8 +20,8 @@ class StorageManager(
     vararg commands: Command
 ) {
     private val commands: MutableMap<String, Command> = HashMap<String, Command>()
-    private val scriptCallStack: Stack<File> = Stack()
-    private val scriptCallStackLimit: Int = 10
+    private val scriptCallstack: Stack<File> = Stack()
+    private val scriptCallstackLimit: Int = 10
 
 
     enum class TaskType {
@@ -85,7 +85,7 @@ class StorageManager(
         if (history.size > 6) history.removeFirst()
     }
 
-    private fun callStackHasScript(callStack: Stack<File>, fileToExecScript: File): Boolean {
+    private fun callstackHasScript(callStack: Stack<File>, fileToExecScript: File): Boolean {
         for (it in callStack) {
             if (it == fileToExecScript || Files.mismatch(
                     it.toPath(),
@@ -137,10 +137,10 @@ class StorageManager(
                     throw e
                 }
             }
-            is CallStackOverflowException -> {
+            is CallstackOverflowException -> {
                 if (ioStream.interactive) {
                     ioStream.writeln(
-                        "Произошло слишком много дополнительных вызовов выполнения " + "скрипта (максимум = $scriptCallStackLimit). Выполнение " + "остановлено."
+                        "Произошло слишком много дополнительных вызовов выполнения " + "скрипта (максимум = $scriptCallstackLimit). Выполнение " + "остановлено."
                     )
                 } else {
                     throw e
@@ -205,7 +205,7 @@ class StorageManager(
 
     /**
      *  @throws RecursiveScriptException
-     *  @throws CallStackOverflowException
+     *  @throws CallstackOverflowException
      */
     private fun doTask(request: Request, ioStream: IOStream): Message {
         return when (request.taskType) {
@@ -234,7 +234,7 @@ class StorageManager(
     }
 
     @kotlin.jvm.Throws(ExitScripException::class)
-    fun exitTask(request: Request, ioStream: IOStream): Message {
+    private fun exitTask(request: Request, ioStream: IOStream): Message {
         //TODO: Logger.log(exiting...)
         throw ExitScripException()
     }
@@ -318,14 +318,14 @@ class StorageManager(
                 ), ioStream = ioStream
             )
         }
-        if (callStackHasScript(scriptCallStack, fileToExecScript)) throw RecursiveScriptException()
-        if (scriptCallStack.size + 1 > scriptCallStackLimit) throw CallStackOverflowException()
+        if (callstackHasScript(scriptCallstack, fileToExecScript)) throw RecursiveScriptException()
+        if (scriptCallstack.size + 1 > scriptCallstackLimit) throw CallstackOverflowException()
 
-        scriptCallStack.push(fileToExecScript)
+        scriptCallstack.push(fileToExecScript)
         try {
             loop(IOStream(FileReader(fileToExecScript), Writer.nullWriter(), false))
         } catch (e: Throwable) {
-            scriptCallStack.pop()
+            scriptCallstack.pop()
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,

@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
         true
     )
     val storageName: String = if (args.isNotEmpty()) {
-        if (args[0].substring(args[0].length - 4..args[0].length) == ".json") {
+        if (args[0].endsWith(".json")) {
             args[0]
         } else {
             args[0] + ".json"
@@ -55,11 +55,11 @@ fun main(args: Array<String>) {
     }
      */
 
-    val fileIOStream: IOStream = IOStream(
-        FileReader(storageFile),
-        FileWriter(storageFile),
-        true
-    )
+//    val fileIOStream: IOStream = IOStream(
+//        FileReader(storageFile),
+//        FileWriter(storageFile),
+//        true
+//    )
 
     val storage = MusicBandStorage(storageName)
     val history = LinkedList<String>()
@@ -67,26 +67,27 @@ fun main(args: Array<String>) {
         storage,
         history,
         stdIOStream,
-        LoadCmd(storage, "load", stdIOStream, fileIOStream),
-        HelpCmd(storage, "help", stdIOStream),
-        InfoCmd(storage, "info", stdIOStream),
-        ShowCmd(storage, "show", stdIOStream),
-        AddCmd(storage, "add", stdIOStream),
-        UpdateWithIDCmd(storage, "update", stdIOStream),
-        RemoveWithIDCmd(storage, "remove_by_id", stdIOStream),
-        ClearCmd(storage, "clear", stdIOStream),
-        SaveCmd(storage, "save", stdIOStream, fileIOStream),
-        ExecuteScriptCmd(storage, "execute_script", stdIOStream, fileIOStream),
-        ExitCmd(storage, "exit", stdIOStream),
-        AddIfMaxCmd(storage, "add_if_max", stdIOStream),
-        RemoveGreaterCmd(storage, "remove_greater", stdIOStream),
-        HistoryCmd(storage, "history", stdIOStream, history),
-        AverageOfNumberOfParticipantsCmd(storage, "average_of_number_of_participants", stdIOStream),
-        CountLessThanAlbumsCountCmd(storage, "count_less_than_albums_count", stdIOStream),
-        PrintAscendingCmd(storage, "print_ascending", stdIOStream)
+        LoadCmd("load"),
+        HelpCmd("help"),
+        InfoCmd("info"),
+        ShowCmd("show"),
+        AddCmd("add"),
+        UpdateWithIDCmd("update"),
+        RemoveWithIDCmd("remove_by_id"),
+        ClearCmd("clear"),
+        SaveCmd("save"),
+        ExecuteScriptCmd("execute_script"),
+        ExitCmd("exit"),
+        AddIfMaxCmd("add_if_max"),
+        RemoveGreaterCmd("remove_greater"),
+        HistoryCmd("history"),
+        AverageOfNumberOfParticipantsCmd("average_of_number_of_participants"),
+        CountLessThanAlbumsCountCmd("count_less_than_albums_count"),
+        PrintAscendingCmd("print_ascending")
     ).apply { loadData(storageFile) }
 
 
+    stdIOStream.writeln("Менеджер запущен. Для справки вы можете вызвать команду help.")
     storageManager.loop()
     stdIOStream.writeln("Работа менеджера завершена.")
     return

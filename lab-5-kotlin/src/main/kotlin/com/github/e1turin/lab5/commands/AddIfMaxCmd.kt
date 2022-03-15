@@ -8,14 +8,11 @@ import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
 class AddIfMaxCmd(
-    target: MusicBandStorage,
     cmdName: String,
-    ioStream: IOStream
-) :
-    Command(
-        cmdName, "Добавить новый элемент в коллекцию, если его значение " +
-                "превышает значения наибольшего элемента этой коллекции"
-    ) {
+) : Command(
+    cmdName,
+    "Добавить новый элемент в коллекцию, если его значение " + "превышает значения наибольшего элемента этой коллекции"
+) {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         ioStream.writeln("ДОБАВЛЕНИЕ НОВОГО МАКСИМАЛЬНОГО ЭЛЕМЕНТА" + target.name)
         val musicBand: MusicBand = ioStream.readMusicBand(
@@ -29,8 +26,7 @@ class AddIfMaxCmd(
             ioStream.writeln("Элемент не добавлен, так как он не максимальный")
         }
         return Response(
-            cmdName, ResponseType.NONE,
-            content = "$cmdName executed with argument: arg=$arg"
+            cmdName, ResponseType.NONE, content = "$cmdName executed with argument: arg=$arg"
         )
     }
 }

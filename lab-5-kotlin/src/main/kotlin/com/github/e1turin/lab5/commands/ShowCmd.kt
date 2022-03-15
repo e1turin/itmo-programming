@@ -6,7 +6,7 @@ import com.github.e1turin.lab5.containers.Response
 import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
-class ShowCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class ShowCmd(cmdName: String) :
     Command(
         cmdName, "Вывести в стандартный поток вывода все элементы " +
                 "коллекции в строковом представлении"

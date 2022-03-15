@@ -1,0 +1,210 @@
+@startuml
+'https://plantuml.com/class-diagram
+' ===================
+' -	private
+' #	protected
+' ~	package private
+' +	public
+' ===================
+
+class IncorrectFileNameException
+class NogivenNameException
+
+enum Color {
+    RED
+    WHITE
+    UNDEFINED
+}
+enum Feeling {
+    PAIN
+}
+class Action {
+    .. fields ..
+    - {field} String description
+    - {field} Quality quality
+}
+
+interface Paintable {
+    + {method} void paint(Color)
+}
+interface Closable {
+    + {method} void close()
+}
+
+class Sound {
+    .. fields ..
+    - {field} String name
+    .. methods ..
+    + {method} void sound()
+}
+
+class Quality {
+    .. fields ..
+    - {field} String description
+}
+
+class Command {
+    .. fields ..
+    - {field} String description
+}
+
+abstract class Thing {
+    .. fields ..
+    - {field} String name
+    - {field} Sound sound
+    - {field} Quality quality
+    - {field} Color color
+    .. methods ..
+    + {method} void toSound()
+    + {method} Action toAct(String) /' name '/
+                \t{quality}
+                }
+
+Thing <-- Action
+Paintable <|.. Thing
+Thing *-- Quality
+Thing *-- Sound
+
+class Rocket
+    Rocket --|> Thing
+class Shots {
+    {field} sound = "Shot"
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Shots -|> Thing
+class Bullets {
+    {field} sound = "Whistling"
+    {field} quality = "Harmful"
+    {field} color = Color.UNDEFINED
+}
+    Bullets -|> Thing
+    'Shots .. Bullets
+entity bullet
+    bullet --> Bullets
+
+class Something {
+    {field} /' ? '/
+}
+    Something --|> Thing
+class ShirtSleeve {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.WHITE
+}
+    Thing <|- ShirtSleeve
+class Bloodtain {
+    color = Color.RED
+}
+    Thing <|-- Bloodtain
+class Door {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Thing <|- Door
+    Door ..|> Closable
+class Shotguns {
+    {field} sound = ""
+    {field} quality = ""
+    {field} color = Color.UNDEFINED
+}
+    Shotguns -|> Thing
+class Healpack {
+    {field} sound = ""
+    {field} quality = "heal"
+    {field} color = Color.UNDEFINED
+}
+    Healpack --|> Thing
+
+abstract class Alive {
+    .. fields ..
+    - {field} String name
+    - {field} Decision decision
+    .. methods ..
+    + {method} Action toLet(Alive) /' persons '/
+    + {method} Action toClimbInto(Thing) /' thing '/
+    + {method} void toFeel(Feeling | Action) /' feeling | action '/
+                \t{face}
+    + {method} void toDecide(String) /' decision '/
+    + {method} String toSee(Action) /' action '/
+    + {method} Action toShout(Command)
+    + {method} Action toTake(Thing)
+    + {method} Action toHear(Action)
+}
+
+class Decision {
+    - {field} decison
+}
+Alive *-- Decision
+
+
+class Person {
+    .. fields ..
+    - {field} Face face
+    .. methods ..
+    + {method} Action toDragIn(Person)
+    + {method} Action toClose(Thing)
+    + {method} Action toReshapeFace(Feeling)
+    + {method} Action toCommandTo(Alive, Command)
+    + {method} Action toHeal(Alive)
+    + {method} Action toLookAt(Thing)
+    + {method} Action toThrowsToWith(Alive, Thing)
+}
+Command --> Person
+Thing --> Alive
+Action --> Alive
+Person -|> Alive
+-class Face {
+    .. fields ..
+    - {field} Set<Feeling> feelings /'ordered set'/
+    .. methods ..
+    + {method} Action toReshape(Feeling) /' feeling '/
+    '/ + {method} String getEmotion() '/
+}
+Face -{ Person
+Face -* Person
+'Face .. Action
+' Feeling .. Face
+' Feeling .. Person
+'Person .. Action
+class Shorty {
+    .. fields ..
+    .. methods ..
+}
+Alive <|-- Shorty
+
+class Policeman {
+    .. fields ..
+    .. methods ..
+    +{method} Action toShoot()
+}
+Alive <|- Policeman
+
+
+entity theFucsia
+    Person <-- theFucsia
+entity theSeledochka
+    Person <-- theSeledochka
+entity theKlepka
+    Person <-- theKlepka
+entity theShortyes
+'theShortys = class {list[]...} ???
+    Shorty <- theShortyes
+entity theSmarty {
+    decison = "last on
+            \t'Rocket' board"
+}
+    theSmarty --> Person
+entity theRigle
+    Policeman <- theRigle
+entity thePolicemen
+    Policeman <-- thePolicemen
+entity theDocPilulckin
+    theDocPilulckin --> Person
+
+
+
+
+
+@enduml

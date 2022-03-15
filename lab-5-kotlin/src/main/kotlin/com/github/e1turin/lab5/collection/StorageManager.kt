@@ -1,13 +1,12 @@
 package com.github.e1turin.lab5.collection
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.e1turin.lab5.commands.Command
 import com.github.e1turin.lab5.containers.*
 import com.github.e1turin.lab5.exceptions.*
 import com.github.e1turin.lab5.util.IOStream
-import java.io.File
-import java.io.FileReader
-import java.io.Writer
+import com.github.e1turin.lab5.util.LocalDateKotlinAdapter
+import com.google.gson.GsonBuilder
+import java.io.*
 import java.nio.file.Files
 import java.time.LocalDate
 import java.util.*
@@ -31,6 +30,7 @@ class StorageManager(
     init {
         for (command in commands) {
             this.commands[command.cmdName] = command
+//            stdIOStream.write(command.cmdName + "; ")
         }
     }
 
@@ -38,10 +38,17 @@ class StorageManager(
         if (storageFile.canRead()) {
             if (storageFile.length() != 0L) { // file is empty is no reason to load data from it
                 try {
-                    val mapper = ObjectMapper()
-                    val storageData = mapper.readValue(
-                        storageFile, MusicBandStorage::class.java
-                    )
+                    val jsonReader = BufferedReader(FileReader(storageFile))
+                    val gson = GsonBuilder()
+                        .serializeNulls()
+                        .registerTypeAdapter(
+                            LocalDate::class.java,
+                            LocalDateKotlinAdapter().nullSafe()
+                        )
+                        .create()
+
+                    val storageData = gson.fromJson(jsonReader, MusicBandStorage::class.java)
+
                     storage.apply {
                         creationDate = storageData.creationDate
                         appendData(storageData.toList()).also {
@@ -50,6 +57,7 @@ class StorageManager(
                     }
                 } catch (ex: Exception) {
                     stdIOStream.writeln("Возникли проблемы с загрузкой данных. Данные не загружены.")
+//                    throw ex
                     //TODO: Logger.log(ex.printStackTrace())
                 }
             }
@@ -59,8 +67,19 @@ class StorageManager(
     }
 
     private fun saveDataToFile(fileToSaveData: File) {
-        val mapper = ObjectMapper()
-        mapper.writeValue(fileToSaveData, storage)
+//        val mapper = ObjectMapper()
+////        mapper.writeValue(System.out, storage)
+//        mapper.writeValue(fileToSaveData, storage)
+//        val gson = Gson()
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .registerTypeAdapter(LocalDate::class.java, LocalDateKotlinAdapter().nullSafe())
+            .create()
+        val jsonString: String = gson.toJson(storage)
+//        stdIOStream.writeln(jsonString)
+        val writer = BufferedWriter(FileWriter(fileToSaveData))
+        writer.write(jsonString)
+        writer.close()
     }
 
     fun validateCmd(cmd: String): Boolean = commands.containsKey(cmd)
@@ -99,7 +118,7 @@ class StorageManager(
     private fun clearStorage() = storage.clear()
 
     fun setCreationDate(date: LocalDate) {
-        storage.creationDate = date
+//        storage.creationDate = date
     }
 
     fun loop(ioStream: IOStream = stdIOStream) {
@@ -112,8 +131,8 @@ class StorageManager(
                 if (validateCmd(cmdName)) {
                     loopStepExecuteValidatedCmdWithArg(cmdName, arg, ioStream)
                 } else {
-                    if (!ioStream.interactive && cmdName.isNotBlank()) throw
-                    NonexistentCommandException(cmdName)
+                    if (!ioStream.interactive && cmdName.isNotBlank())
+                        throw NonexistentCommandException(cmdName)
                     ioStream.writeln("Неверное имя команды! Попробуйте снова")
                 }
             } catch (e: ExitScripException) {
@@ -130,6 +149,9 @@ class StorageManager(
 
     private fun processLoopExceptions(e: Throwable, ioStream: IOStream) {
         when (e) {
+            is InterruptedException -> {
+                return
+            }
             is RecursiveScriptException -> {
                 if (ioStream.interactive) {
                     ioStream.writeln("Обнаружена рекурсия в скрипте. Выполнение прекращено.")
@@ -174,7 +196,8 @@ class StorageManager(
             val cmdAndArg = ioStream.termInputUntil(sep = ">>>",
                 hint = "Ошибка! Такой команды нет, попробуйте снова",
                 condition = { it != null && validateCmd(it.first) },
-                query = { ioStream.readCmdWithArg() })!!
+                query = { ioStream.readCmdWithArg() })
+                ?: throw InvalidCmdArgumentException("cmdAndArg")
             cmdName = cmdAndArg.first
             arg = cmdAndArg.second
         } catch (e: InterruptedException) {
@@ -221,7 +244,6 @@ class StorageManager(
         }
     }
 
-
     private fun clearCollectionTask(request: Request, ioStream: IOStream): Message {
         clearStorage()
         return giveResponseToCmd(
@@ -246,7 +268,8 @@ class StorageManager(
         }
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
-                request.sender, ResponseType.TASK_COMPLETED, content = helpString
+                request.sender, ResponseType.TASK_COMPLETED, arg = helpString,
+                content = "Task from ${request.sender} finished, collection cleared"
             ), ioStream = ioStream
         )
     }
@@ -287,7 +310,7 @@ class StorageManager(
 
     private fun giveHistoryTask(request: Request, ioStream: IOStream): Message {
         var historyString: String = "История команд:\n<...>"
-        for (it in 1..history.size) {
+        for (it in 1 until history.size) {
             historyString += "\n$it\t:${history[it]}"
         }
         return giveResponseToCmd(
@@ -314,7 +337,8 @@ class StorageManager(
                 cmdName = request.sender, response = Response(
                     request.sender,
                     ResponseType.TASK_FAILED,
-                    content = "Произошла ошибка. Файла не существует"
+                    content = "Произошла ошибка. Файл нельзя продолжить считывание или не " +
+                            "существует"
                 ), ioStream = ioStream
             )
         }

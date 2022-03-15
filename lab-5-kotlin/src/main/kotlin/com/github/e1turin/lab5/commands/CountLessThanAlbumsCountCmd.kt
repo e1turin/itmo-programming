@@ -7,7 +7,7 @@ import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 import java.io.StringReader
 
-class CountLessThanAlbumsCountCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class CountLessThanAlbumsCountCmd(cmdName: String) :
     Command(
         cmdName, "Вывести количество элементов, значение поля albumsCount " +
                 "которых меньше заданного"

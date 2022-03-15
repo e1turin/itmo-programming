@@ -1,5 +1,6 @@
 package com.github.e1turin.lab5.collection
 
+import com.fasterxml.jackson.annotation.JsonSetter
 import java.time.Clock
 import java.time.LocalDate
 import java.util.*
@@ -13,6 +14,11 @@ data class MusicBand(
     private var genre: MusicGenre,
     private var label: Label
 ) : Comparable<MusicBand> {
+
+//    @JsonSetter("establishmentDate")
+//    fun setEstablishmentDate(value: String){
+//        this.establishmentDate = Date.
+//    }
 
     private var creationDate = LocalDate.now(Clock.systemUTC())
     var id: Int = -1
@@ -36,16 +42,17 @@ data class MusicBand(
 
     override fun toString(): String {
         "sdfsd".compareTo("sDFF")
-        return """MusicBand(id=$id
-                            name='$name', 
-                            coordinates=$coordinates, 
-                            numberOfParticipants=$numberOfParticipants, 
-                            albumsCount=$albumsCount, 
-                            establishmentDate=$establishmentDate, 
-                            genre=$genre, 
-                            label=$label, 
-                            creationDate=$creationDate, 
-                  )""".trimMargin()
+        return """
+            MusicBand(id=$id,
+                name='$name', 
+                coordinates=$coordinates, 
+                numberOfParticipants=$numberOfParticipants, 
+                albumsCount=$albumsCount, 
+                establishmentDate=$establishmentDate, 
+                genre=$genre, 
+                label=$label, 
+                creationDate=$creationDate, 
+            )""".trimMargin()
     }
 
 

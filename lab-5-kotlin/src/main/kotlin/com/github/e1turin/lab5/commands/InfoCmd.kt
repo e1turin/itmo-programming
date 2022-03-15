@@ -6,7 +6,7 @@ import com.github.e1turin.lab5.containers.Response
 import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
-class InfoCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class InfoCmd(cmdName: String) :
     Command(
         cmdName, "вывести в стандартный поток вывода информацию о " +
                 "коллекции (тип, дата инициализации, количество элементов и т.д."

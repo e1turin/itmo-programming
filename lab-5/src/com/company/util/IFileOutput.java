@@ -1,4 +1,4 @@
 package com.company.util;
 
-public interface FileOutputInteface {
+public interface IFileOutput {
 }

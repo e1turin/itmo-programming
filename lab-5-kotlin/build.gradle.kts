@@ -13,11 +13,12 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.fasterxml.jackson.core:jackson-databind:2.10.0")
+    implementation("com.google.code.gson:gson:2.9.0")
 }
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "MainKt"
+        attributes["Main-Class"] = "com.github.e1turin.lab5.MainKt"
     }
 
     configurations["compileClasspath"].forEach { file: File ->

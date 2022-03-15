@@ -6,7 +6,7 @@ import com.github.e1turin.lab5.containers.Response
 import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
-class PrintAscendingCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class PrintAscendingCmd(cmdName: String) :
     Command(
         cmdName, "Вывести элементы коллекции в порядке возрастания"
     ) {

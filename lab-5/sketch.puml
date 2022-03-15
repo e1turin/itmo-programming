@@ -1,11 +1,29 @@
 @startuml
 'https://plantuml.com/sequence-diagram
+actor "In/Output"
+database "file json"
+participant java.io
+control Main
+"file json" <-> Main : read data
+Main -> MyCollection : load
+MyCollection <- MyCollection : sort
 
-autonumber
+"In/Output" -> java.io : InputStreamReader
 
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
+java.io -> Main : command
+Main <-> MyCollection : input validate
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
+Main -> Main : command exe cycle
+
+Main -> MyCollection : request
+Main <- MyCollection : response
+
+java.io <- Main : response
+
+"In/Output" <- java.io : PrintWriter
+
+
+
+
+
 @enduml

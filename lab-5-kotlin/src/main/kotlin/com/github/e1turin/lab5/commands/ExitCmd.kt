@@ -5,7 +5,7 @@ import com.github.e1turin.lab5.collection.StorageManager
 import com.github.e1turin.lab5.containers.*
 import com.github.e1turin.lab5.util.IOStream
 
-class ExitCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class ExitCmd( cmdName: String) :
     Command(cmdName, "Завершить программму (без сохранения в файл)") {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         ioStream.writeln("ВЫХОД ИЗ МЕНЕДЖЕРА КОЛЛЕКЦИИ")

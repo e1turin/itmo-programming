@@ -7,7 +7,7 @@ import com.github.e1turin.lab5.containers.Response
 import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
-class RemoveGreaterCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class RemoveGreaterCmd( cmdName: String) :
     Command(cmdName, "Удалить из коллекции все элементы, превышающие заданный") {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         ioStream.writeln("ФИЛЬТРАЦИЯ ЭЛЕМЕНТОВ БОЛЬШЕ ЗАДАНОГО")

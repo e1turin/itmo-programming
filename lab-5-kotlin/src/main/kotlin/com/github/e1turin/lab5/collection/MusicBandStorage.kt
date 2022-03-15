@@ -1,13 +1,27 @@
 package com.github.e1turin.lab5.collection
 
+import com.fasterxml.jackson.annotation.JsonGetter
+import com.fasterxml.jackson.annotation.JsonSetter
 import java.time.Clock
 import java.time.LocalDate
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-class MusicBandStorage(val name: String) {
+class MusicBandStorage(val name: String = "storage.json") {
+
     private val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()
-    var creationDate = LocalDate.now(Clock.systemUTC())
+    var creationDate: LocalDate = LocalDate.now(Clock.systemUTC())
+
+//    @JsonGetter("creationDate")
+//    fun get():String {
+//        return this.creationDate.toString()
+//    }
+//
+//    @JsonSetter("creationDate")
+//    fun set(value: String) {
+//        this.creationDate = LocalDate.parse(value)
+//    }
+
     var size: Int
         get() = data.size
         private set(n: Int) {}
@@ -23,9 +37,10 @@ class MusicBandStorage(val name: String) {
     fun appendData(newData: Collection<MusicBand>) {
         data.addAll(newData)
     }
-    fun makeIndices(){
+
+    fun makeIndices() {
         var id = 1
-        for(it in data){
+        for (it in data) {
             it.setId(id++)
         }
         lastElementId = id
@@ -36,6 +51,7 @@ class MusicBandStorage(val name: String) {
         array = data.toArray(array)
         return array
     }
+
     fun toList(): List<MusicBand> {
         return data.toList()
     }
@@ -74,8 +90,9 @@ class MusicBandStorage(val name: String) {
     fun getInfo(): String {
         return """
         Тип коллекции: ${data.javaClass}
-        Дата инициализации: $creationDate
         Количество элементов: ${data.size}
         """.trimIndent()
+
+//        Дата инициализации: $creationDate
     }
 }

@@ -6,10 +6,7 @@ import com.github.e1turin.lab5.containers.*
 import com.github.e1turin.lab5.util.IOStream
 
 class LoadCmd(
-    target: MusicBandStorage,
     cmdName: String,
-    ioStream: IOStream,
-    fileIOStream: IOStream
 ) : Command(cmdName, "Загрузка содержимого файла в коллекцию"),
     Requestable {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {

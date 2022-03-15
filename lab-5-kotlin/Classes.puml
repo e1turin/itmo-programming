@@ -133,10 +133,10 @@ Requestable .. Command
 class JavaDoc << (J, #FFCC99)>> #FFDD99
 Main .u.> JavaDoc
 
-class com.fasterxml.jackson.databind.ObjectMapper << (J, #FFCC99)>> #FFDD99
-class com.fasterxml.jackson.databind.readValue << (J, #FFCC99)>> #FFDD99
-StorageManager o-- com.fasterxml.jackson.databind.readValue
-StorageManager o-- com.fasterxml.jackson.databind.ObjectMapper
+
+class com.google.gson.GsonBuilder << (J, #FFCC99)>> #FFDD99
+StorageManager o-- com.google.gson.GsonBuilder
+
 
 class java.io.InputStreamReader << (C, #EEAAAA) >> #EFCCCC
 class java.io.PrintWriter << (C, #EEAAAA) >> #EFCCCC
@@ -152,11 +152,11 @@ package util {
     interface IDateValidator {
         + boolean isValid(String)
     }
-    class DateValidatorUsingDateFormat {
+    class DateValidator {
         - final String dateFormat
     }
-    DateValidatorUsingDateFormat -u-|> IDateValidator
-    DateValidatorUsingDateFormat <-[hidden]d- IOStream
+    DateValidator -u-|> IDateValidator
+    DateValidator <-[hidden]d- IOStream
     class IOStream << (C, #EEEE99)>> #FFEE99{
         + final Writer writer
         + boolean interactive
@@ -185,7 +185,10 @@ package util {
         + String readFileName(String)
         + Pair<String,String> readCmdWithArg()
     }
+    class LocalDateAdapter
+    LocalDateAdapter <-[hidden]u- IOStream
 }
+LocalDateAdapter .> com.google.gson.GsonBuilder
 Command --o StorageManager
 '(Command,StorageManager) - ICommand
 

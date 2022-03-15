@@ -7,7 +7,7 @@ import com.github.e1turin.lab5.containers.Response
 import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
-class AddCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class AddCmd(cmdName: String) :
     Command(cmdName, "Добавить новый элемент в коллекцию") {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         ioStream.writeln("ДОБАВЛЕНИЕ НОВОГО ЭЛЕМЕНТА В КОЛЛЕКЦИЮ " + target.name)

@@ -8,7 +8,7 @@ import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 import java.io.StringReader
 
-class UpdateWithIDCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class UpdateWithIDCmd(cmdName: String) :
     Command(
         cmdName, "Обновить значение элемента коллекции, id которого равен " +
                 "заданному"
@@ -30,7 +30,7 @@ class UpdateWithIDCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStr
             )
             musicBand.setId(id)
             target.add(musicBand)
-            ioStream.writeln("Новый элемент добавлен")
+            ioStream.writeln("Элемент изменен")
 
             return Response(
                 cmdName, ResponseType.TASK_COMPLETED,

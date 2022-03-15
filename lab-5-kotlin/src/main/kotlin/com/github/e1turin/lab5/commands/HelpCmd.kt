@@ -5,12 +5,12 @@ import com.github.e1turin.lab5.collection.StorageManager
 import com.github.e1turin.lab5.containers.*
 import com.github.e1turin.lab5.util.IOStream
 
-class HelpCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class HelpCmd(cmdName: String) :
     Command(cmdName, "Вывести справку по доступным командам"),
     Requestable {
 
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
-        ioStream.writeln("ОПИСАНИЕ КОМАНД МЕНЕДЖЕРА КОЛЛЕКЦИИ" + target.name)
+        ioStream.writeln("ОПИСАНИЕ КОМАНД МЕНЕДЖЕРА КОЛЛЕКЦИИ " + target.name)
         return Request(
             cmdName,
             RequestType.DO_TASK,

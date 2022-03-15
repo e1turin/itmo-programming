@@ -7,7 +7,7 @@ import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 import java.io.StringReader
 
-class RemoveWithIDCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class RemoveWithIDCmd(cmdName: String) :
     Command(cmdName, "Удалить элемент из коллекции по его id") {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         ioStream.writeln("УДАЛЕНИЕ ОБЪЕКТА")

@@ -5,7 +5,7 @@ import com.github.e1turin.lab5.collection.StorageManager
 import com.github.e1turin.lab5.containers.*
 import com.github.e1turin.lab5.util.IOStream
 
-class ClearCmd(target: MusicBandStorage, cmdName: String, ioStream: IOStream) :
+class ClearCmd(cmdName: String) :
     Command(cmdName, "Очистить коллекцию"),
     Requestable {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {

@@ -8,4 +8,7 @@ untitled/
 #!lab-2/out/artifacts/lab_2_jar/*.jar
 #!lab-2-kotlin/out/artifacts/lab-2/*.jar
 *-copy
+*.psd
+*/build/
+!*/build/libs
 

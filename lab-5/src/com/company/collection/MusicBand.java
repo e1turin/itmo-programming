@@ -1,4 +1,4 @@
-package com.company;
+package com.company.collection;
 
 import java.time.Clock;
 
@@ -14,7 +14,8 @@ public class MusicBand {
     MusicGanre genre;
     Label label;
 
-    public MusicBand(int id, String name,
+    public MusicBand(int id,
+                     String name,
                      Coordinates coordinates,
                      int numberOfParticipants,
                      long albumsCount,

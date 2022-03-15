@@ -7,9 +7,7 @@ import com.github.e1turin.lab5.containers.ResponseType
 import com.github.e1turin.lab5.util.IOStream
 
 class AverageOfNumberOfParticipantsCmd(
-    target: MusicBandStorage,
-    cmdName: String,
-    ioStream: IOStream
+    cmdName: String
 ) : Command(cmdName, "Вывести среднее значение поля numberOfParticipants") {
     override fun exec(arg: String, target: MusicBandStorage, ioStream: IOStream): Message {
         var sumOfNumberOfParticipants = 0

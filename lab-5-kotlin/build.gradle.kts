@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.e1turin"
-version = "1.0-SNAPSHOT"
+version = "RELEASE-CANDIDATE"
 
 repositories {
     mavenCentral()
@@ -12,7 +12,6 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.10.0")
     implementation("com.google.code.gson:gson:2.9.0")
 }
 

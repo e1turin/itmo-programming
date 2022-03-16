@@ -1,6 +1,5 @@
 package com.github.e1turin.lab5.collection
 
-import com.fasterxml.jackson.annotation.JsonSetter
 import java.time.Clock
 import java.time.LocalDate
 import java.util.*

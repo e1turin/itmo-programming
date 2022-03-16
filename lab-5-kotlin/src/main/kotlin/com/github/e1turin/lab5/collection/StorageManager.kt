@@ -347,7 +347,7 @@ class StorageManager(
 
         scriptCallstack.push(fileToExecScript)
         try {
-            loop(IOStream(FileReader(fileToExecScript), Writer.nullWriter(), false))
+            loop(IOStream(BufferedReader(FileReader(fileToExecScript)), Writer.nullWriter(), false))
         } catch (e: Throwable) {
             scriptCallstack.pop()
             return giveResponseToCmd(

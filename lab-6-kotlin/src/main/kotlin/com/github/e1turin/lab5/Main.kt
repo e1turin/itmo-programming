@@ -1,17 +1,13 @@
 package com.github.e1turin.lab5
 
-import com.github.e1turin.lab5.collection.MusicBandStorage
-import com.github.e1turin.lab5.collection.StorageManager
-import com.github.e1turin.lab5.commands.*
-import com.github.e1turin.lab5.util.IOStream
+import com.github.e1turin.lab5.common.collection.MusicBandStorage
+import com.github.e1turin.lab5.common.collection.StorageManager
+import com.github.e1turin.lab5.common.commands.*
+import com.github.e1turin.lab5.common.util.IOStream
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.LocalDate
 import java.util.LinkedList
-import java.util.Queue
 
 fun main(args: Array<String>) {
     val stdIOStream = IOStream(

@@ -15,8 +15,10 @@ import java.util.Queue
 
 fun main(args: Array<String>) {
     val stdIOStream = IOStream(
+//        System.`in`.reader(),
+//        System.out.writer(),
         InputStreamReader(System.`in`, StandardCharsets.UTF_8),
-        PrintWriter(System.out),
+        OutputStreamWriter(System.out, StandardCharsets.UTF_8),
         true
     )
     val storageName: String = if (args.isNotEmpty()) {

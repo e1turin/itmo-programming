@@ -12,4 +12,5 @@ untitled/
 */build/
 !*/build/libs
 /test
+/playground
 

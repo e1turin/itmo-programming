@@ -1,6 +1,6 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.collection.StorageManager
+import com.github.e1turin.lab5.common.application.StorageManager
 import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
 
@@ -24,17 +24,17 @@ class LoadCmd(
             )
         } else {
             return Response(
-                cmdName, ResponseType.TASK_FAILED,
+                cmdName, ResponseStatus.TASK_FAILED,
                 content = "Execution of $cmdName with argument: '$arg' was interrupted"
             )
         }
     }
 
-    override fun getResponse(taskResponse: Response, ioStream: IOStream): Message {
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): Message {
         ioStream.writeln(taskResponse.content)
         return Response(
             cmdName,
-            taskResponse.type,
+            taskResponse.status,
             content = "$cmdName got Response, after ${taskResponse.sender}"
         )
     }

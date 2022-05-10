@@ -1,25 +1,32 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.collection.StorageManager
+import com.github.e1turin.lab5.client.Client
 import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
+import com.github.e1turin.lab5.protocol.LdpRequest
+import com.github.e1turin.lab5.protocol.LdpResponse
 
 class HistoryCmd(
     cmdName: String,
-) : Command(cmdName, "Вывести последние 6 команд (без их аргументов)"), Requestable {
-
-    override fun execute(arg: String, ioStream: IOStream): Message {
-        ioStream.writeln("ИСТОРИЯ КОМАНД МЕНЕДЖЕРА КОЛЛЕКЦИИ " + target.name)
-        return Request(cmdName,RequestType.DO_TASK, StorageManager.TaskType.GIVE_HISTORY,
-            content = "$cmdName executed with arg=$arg, sent Request, waits Response"
-        )
+) : Command(cmdName) {
+    init {
+        this.description = "Вывести последние 6 команд (без их аргументов)"
     }
 
-    override fun getResponse(taskResponse: Response, ioStream: IOStream): Message {
-        ioStream.writeln(taskResponse.content)
-        return Response(cmdName, ResponseType.TASK_COMPLETED,
-            content = "$cmdName got Response, after ${taskResponse.sender}"
-        )
+    object ARGS {
+        const val history_list = "history_list"
+    }
+
+    override fun execute(arg: String, ioStream: IOStream): LdpRequest {
+        ioStream.writeln("ИСТОРИЯ КОМАНД")
+        return LdpRequest().apply {
+            command(Client.TASKS.HISTORY)
+        }
+    }
+
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): LdpResponse {
+        ioStream.writeln(taskResponse.arg as String)
+        return LdpResponse(LdpResponse.Status.OK)
     }
 
 }

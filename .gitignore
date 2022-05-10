@@ -11,4 +11,5 @@ untitled/
 *.psd
 */build/
 !*/build/libs
+/test
 

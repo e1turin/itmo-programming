@@ -1,9 +1,9 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.collection.MusicBand
+import com.github.e1turin.lab5.common.application.MusicBand
 import com.github.e1turin.lab5.common.containers.Message
 import com.github.e1turin.lab5.common.containers.Response
-import com.github.e1turin.lab5.common.containers.ResponseType
+import com.github.e1turin.lab5.common.containers.ResponseStatus
 import com.github.e1turin.lab5.common.util.IOStream
 import java.io.StringReader
 
@@ -20,7 +20,7 @@ class UpdateWithIDCmd(cmdName: String) :
             ioStream.writeln("Не верный параметр запроса! Должно быть натуральное число от 1 " +
                     "(int), либо такого id не существует")
             return Response(
-                cmdName, ResponseType.TASK_FAILED,
+                cmdName, ResponseStatus.TASK_FAILED,
                 content = "$cmdName failed with wrong argument: arg='$arg'"
             )
         } else {
@@ -32,7 +32,7 @@ class UpdateWithIDCmd(cmdName: String) :
             ioStream.writeln("Элемент изменен")
 
             return Response(
-                cmdName, ResponseType.TASK_COMPLETED,
+                cmdName, ResponseStatus.TASK_COMPLETED,
                 content = "$cmdName executed with argument: $arg"
             )
         }

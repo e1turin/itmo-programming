@@ -1,17 +1,17 @@
-package com.github.e1turin.lab5.common.collection
+package com.github.e1turin.lab5.common.application
 
 import java.time.Clock
 import java.time.LocalDate
 import java.util.*
 
 data class MusicBand(
-    private var name: String,
-    private var coordinates: Coordinates,
-    private var numberOfParticipants: Int,
-    private var albumsCount: Long,
-    private var establishmentDate: Date?,
-    private var genre: MusicGenre,
-    private var label: Label
+    private val name: String,
+    private val coordinates: Coordinates,
+    private val numberOfParticipants: Int,
+    private val albumsCount: Long,
+    private val establishmentDate: Date?,
+    private val genre: MusicGenre,
+    private val label: Label
 ) : Comparable<MusicBand> {
 
 //    @JsonSetter("establishmentDate")

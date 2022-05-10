@@ -1,7 +1,6 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.collection.MusicBand
-import com.github.e1turin.lab5.common.collection.StorageManager
+import com.github.e1turin.lab5.common.application.MusicBand
 import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
 
@@ -15,7 +14,8 @@ class AddCmd(cmdName: String) :
 
         return Request(
             cmdName, RequestType.DO_TASK, "ADD_ELEMENT",
-            content = "$cmdName executed with arg=$arg, sent Request, waits Response (doc strings)",
+            content = "$cmdName executed with arg=$arg, sent Request, waits Response with content" +
+                    " as String",
             arg = musicBand
         )
 /*
@@ -26,18 +26,17 @@ class AddCmd(cmdName: String) :
             cmdName, ResponseType.TASK_COMPLETED,
             content = "$cmdName executed with argument: arg='$arg'"
         )
-
  */
 
     }
 
-    override fun getResponse(taskResponse: Response, ioStream: IOStream): Message {
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): Message {
 //        ioStream.writeln("Новый элемент добавлен")
         ioStream.writeln(taskResponse.content)
 
         return Response(
             cmdName,
-            taskResponse.type,
+            taskResponse.status,
             content = "$cmdName got Response, after ${taskResponse.sender}"
         )
     }

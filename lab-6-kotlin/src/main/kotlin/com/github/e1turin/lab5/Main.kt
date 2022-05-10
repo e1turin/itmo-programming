@@ -1,7 +1,7 @@
 package com.github.e1turin.lab5
 
-import com.github.e1turin.lab5.common.collection.MusicBandStorage
-import com.github.e1turin.lab5.common.collection.StorageManager
+import com.github.e1turin.lab5.common.application.MusicBandStorage
+import com.github.e1turin.lab5.common.application.StorageManager
 import com.github.e1turin.lab5.common.commands.*
 import com.github.e1turin.lab5.common.util.IOStream
 import java.io.*
@@ -75,7 +75,7 @@ fun main(args: Array<String>) {
         ExecuteScriptCmd("execute_script"),
         ExitCmd("exit"),
         AddIfMaxCmd("add_if_max"),
-        RemoveGreaterCmd("remove_greater"),
+        RemoveAllGreaterCmd("remove_greater"),
         HistoryCmd("history"),
         AverageOfNumberOfParticipantsCmd("average_of_number_of_participants"),
         CountLessThanAlbumsCountCmd("count_less_than_albums_count"),

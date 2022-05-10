@@ -1,9 +1,9 @@
 package com.github.e1turin.lab5.common.util
 
-import com.github.e1turin.lab5.common.collection.Coordinates
-import com.github.e1turin.lab5.common.collection.Label
-import com.github.e1turin.lab5.common.collection.MusicBand
-import com.github.e1turin.lab5.common.collection.MusicGenre
+import com.github.e1turin.lab5.common.application.Coordinates
+import com.github.e1turin.lab5.common.application.Label
+import com.github.e1turin.lab5.common.application.MusicBand
+import com.github.e1turin.lab5.common.application.MusicGenre
 import com.github.e1turin.lab5.common.exceptions.InvalidCmdArgumentException
 import com.github.e1turin.lab5.util.DateValidator
 import java.io.IOException

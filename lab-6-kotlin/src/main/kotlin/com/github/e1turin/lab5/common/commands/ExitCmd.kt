@@ -1,6 +1,5 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.collection.StorageManager
 import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
 
@@ -12,7 +11,7 @@ class ExitCmd( cmdName: String) :
         if (ioStream.yesAnswer()) {
             ioStream.writeln("Выход из консоли управления...")
             return Request(
-                cmdName, RequestType.DO_TASK, StorageManager.TaskType.EXIT,
+                cmdName, RequestType.DO_TASK, "EXIT",
                 content = "$cmdName executed with argument: '$arg' and agreement, " +
                         "exiting from manager"
             )
@@ -20,9 +19,16 @@ class ExitCmd( cmdName: String) :
 
         ioStream.writeln("Отмена завершения работы")
         return Response(
-            cmdName, ResponseType.TASK_FAILED,
+            cmdName, ResponseStatus.TASK_FAILED,
             content = "Execution of $cmdName with argument: '$arg' was interrupted"
         )
 
+    }
+
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): Message {
+        return Response( cmdName,
+            taskResponse.status,
+            content = "$cmdName got Response, after ${taskResponse.sender}"
+        )
     }
 }

@@ -1,8 +1,6 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.containers.Message
-import com.github.e1turin.lab5.common.containers.Response
-import com.github.e1turin.lab5.common.containers.ResponseType
+import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
 import java.io.StringReader
 
@@ -12,24 +10,41 @@ class RemoveWithIDCmd(cmdName: String) :
         ioStream.writeln("УДАЛЕНИЕ ОБЪЕКТА")
         val stringIOStream = IOStream(StringReader(arg), ioStream.writer, false)
         val id = stringIOStream.readIntOrNull()
-        if (id == null || id < 0 || !target.hasElementWithID(id)) {
+        if (id == null || id < 0 ) {
             ioStream.writeln("Не верный параметр запроса! Должно быть натуральное число от 1 " +
-                    "(int), либо такого id не существует")
+                    "(int)")
             return Response(
-                cmdName, ResponseType.TASK_FAILED,
+                cmdName, ResponseStatus.TASK_FAILED,
                 content = "$cmdName failed with wrong argument: arg='$arg'"
             )
         } else {
-            val result = target.deleteWithID(id)
-            if (result) {
-                ioStream.writeln("объект удален из коллекции")
-            } else {
-                ioStream.writeln("объект не удален из коллекции")
-            }
+            return Request(
+                cmdName, RequestType.DO_TASK, "REMOVE_ELEMENTS",
+                content = "$cmdName executed with arg=$arg, sent Request, waits Response with content" +
+                        " as String",
+                arg = RequestArg("ID",
+                    id,
+                    0) //mock
+            )
             return Response(
-                cmdName, ResponseType.TASK_COMPLETED,
+                cmdName, ResponseStatus.TASK_COMPLETED,
                 content = "$cmdName executed with argument: $arg"
             )
         }
+    }
+
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): Message {
+        ioStream.writeln(
+            when (taskResponse.status) {
+                ResponseStatus.TASK_COMPLETED -> "Элемент успешно удален"
+                ResponseStatus.TASK_FAILED -> "Ошибка! Элемент не удален"
+                else -> taskResponse.status.toString()
+            }
+        )
+        return Response(
+            cmdName,
+            taskResponse.status,
+            content = "$cmdName got Response, after ${taskResponse.sender}"
+        )
     }
 }

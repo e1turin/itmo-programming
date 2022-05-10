@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
 //        System.`in`.reader(),
 //        System.out.writer(),
         InputStreamReader(System.`in`, StandardCharsets.UTF_8),
-        OutputStreamWriter(System.out, StandardCharsets.UTF_8),
+        PrintWriter(System.out),
         true
     )
     val storageName: String = if (args.isNotEmpty()) {

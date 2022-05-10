@@ -1,4 +1,4 @@
-package com.github.e1turin.lab5.common.collection
+package com.github.e1turin.lab5.common.application
 
 import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.exceptions.*
@@ -13,10 +13,11 @@ import java.util.*
 
 class StorageManager(
     private var storage: MusicBandStorage,
-    private val history: LinkedList<String>,
     private val stdIOStream: IOStream,
+    private val history: LinkedList<String> = LinkedList(),
 //    vararg commands: Command,
-    private val commandManager: CommandManager
+//    private val commandManager: CommandManager
+
 ) {
     //    private val commands: MutableMap<String, Command> = HashMap<String, Command>()
     private val scriptCallstack: Stack<File> = Stack()
@@ -49,8 +50,8 @@ class StorageManager(
                 try {
                     val jsonReader = BufferedReader(FileReader(storageFile))
                     val gson = GsonBuilder().serializeNulls().registerTypeAdapter(
-                            LocalDate::class.java, LocalDateKotlinAdapter().nullSafe()
-                        ).create()
+                        LocalDate::class.java, LocalDateKotlinAdapter().nullSafe()
+                    ).create()
 
                     val storageData = gson.fromJson(jsonReader, MusicBandStorage::class.java)
 
@@ -88,14 +89,9 @@ class StorageManager(
 
 //    private fun validateCmd(cmd: String): Boolean = commandManager.validateCmd(cmd)
 
-    private fun processCmd(cmdName: String, arg: String, ioStream: IOStream): Message =
-        commandManager.executeCmd(cmdName, arg, ioStream)
 
-    private fun giveResponseToCmd(
-        cmdName: String, response: Response, ioStream: IOStream
-    ): Message = commandManager.giveResponseToCmd(cmdName, response, ioStream)
 
-    private fun addCmdToHistory(cmdName: String) {
+    private fun attachToHistory(cmdName: String) {
         history.addLast(cmdName)
         if (history.size > 6) history.removeFirst()
     }
@@ -116,6 +112,7 @@ class StorageManager(
 //        storage.creationDate = date
     }
 
+    /*
     fun loop(ioStream: IOStream = stdIOStream) {
         while (ioStream.interactive || ioStream.canRead()) {
             val cmdAndArg = commandManager.getCmdWithArg(ioStream)
@@ -124,7 +121,7 @@ class StorageManager(
 
             try {
 //                if (commandManager.validateCmd(cmdName)) {
-                    loopStepExecuteValidatedCmdWithArg(cmdName, arg, ioStream)
+                loopStepExecuteValidatedCmdWithArg(cmdName, arg, ioStream)
 //                } else {
 //                    if (!ioStream.interactive && cmdName.isNotBlank()) throw NonexistentCommandException(
 //                        cmdName
@@ -142,48 +139,9 @@ class StorageManager(
             }
         }
     }
+     */
 
-    private fun processLoopExceptions(e: Throwable, ioStream: IOStream) {
-        when (e) {
-            is InterruptedException -> {
-                return
-            }
-            is RecursiveScriptException -> {
-                if (ioStream.interactive) {
-                    ioStream.writeln("Обнаружена рекурсия в скрипте. Выполнение прекращено.")
-                } else {
-                    throw e
-                }
-            }
-            is CallstackOverflowException -> {
-                if (ioStream.interactive) {
-                    ioStream.writeln(
-                        "Произошло слишком много дополнительных вызовов выполнения " + "скрипта (максимум = $scriptCallstackLimit). Выполнение " + "остановлено."
-                    )
-                } else {
-                    throw e
-                }
-            }
-            is NonexistentCommandException -> {
-                if (ioStream.interactive) {
-                    ioStream.writeln("Попытка выполнить несуществующую команду ${e.cmd}")
-                } else {
-                    throw e
-                }
-            }
-            is InvalidCmdArgumentException -> {
-                if (ioStream.interactive) {
-                    ioStream.writeln("Не верные значения параметров (${e.arg})")
-                } else {
-                    throw e
-                }
-            }
 
-            else -> {
-                throw e
-            }
-        }
-    }
 
     /*
     private fun loopStepGetCmdWithArg(ioStream: IOStream): Pair<String, String> {
@@ -237,6 +195,8 @@ class StorageManager(
         return when (request.task) {
             "ADD_ELEMENT" -> addElementTask(request, ioStream)
             "ADD_IF_MAX" -> addElementIfMaxTask(request, ioStream)
+            "GIVE_AVERAGE_VALUE" -> giveAverageValueTask(request, ioStream)
+            "COUNT_ELEMENTS" -> countElements(request, ioStream)
             "CLEAR_COLLECTION" -> clearCollectionTask(request, ioStream)
             "EXECUTE_SCRIPT" -> execScriptTask(request, ioStream)
             "EXIT" -> exitTask(request, ioStream)
@@ -244,8 +204,148 @@ class StorageManager(
             "SAVE_DATA" -> saveDataTask(request, ioStream)
             "LOAD_DATA" -> TODO()
             "GIVE_HISTORY" -> giveHistoryTask(request, ioStream)
+            "GIVE_COLLECTION_INFO" -> giveCollectionInfoTask(request, ioStream)
+            "GIVE_LIST_OF_ELEMENTS" -> giveStringListOfElementsTask(request, ioStream)
+            "REVOME_ELEMENTS" -> removeElementsTask(request, ioStream)
             "NONE" -> TODO()
             else -> TODO("Other task is not yet implemented")
+        }
+    }
+
+    private fun removeElementsTask(request: Request, ioStream: IOStream): Message {
+        val args = request.arg as RequestArg<*,*,*>
+//        val elementWithConditionWithAmount = request.arg as Triple<*, *, *>
+//        val comparableElement = elementWithConditionWithAmount.first as MusicBand
+//        val condition = elementWithConditionWithAmount.second as String
+//        val amount = elementWithConditionWithAmount.third as Int
+        when (args.mode as String) {//TYPE
+            "GREATER" -> when(args.first as Int){ //AMOUNT
+                -1 -> storage.removeIf { it > args.second as MusicBand } //ALL elements
+                in 0..storage.size -> {TODO()}
+                else -> {TODO()}
+            }
+            "SMALLER" -> when(args.second as Int){ //AMOUNT
+                -1 -> storage.removeIf { it < args.second as MusicBand } //ALL elements
+                in 0..storage.size -> {TODO()}
+                else -> {TODO()}
+            }
+            "ID" -> {
+//                    || !tar, либо такого id не существует
+//            get.hasElementWithID(id)
+                val result = target.deleteWithID(id)
+                if (result) {
+                    ioStream.writeln("объект удален из коллекции")
+                } else {
+                    ioStream.writeln("объект не удален из коллекции")
+                }
+
+            }
+            else -> {}
+        }
+        return giveResponseToCmd(
+            cmdName = request.sender, response = Response(
+                request.sender,
+                ResponseStatus.TASK_COMPLETED,
+                content = "Task from ${request.sender} finished, collection filtered"
+            ), ioStream = ioStream
+        )
+    }
+
+    private fun giveStringListOfElementsTask(request: Request, ioStream: IOStream): Message {
+        val order = request.arg as String
+        val elements = storage.toArray()
+        when (order) {
+            "DESCENDING" -> elements.sortDescending()
+            "ASCENDING" -> elements.sort()
+            else -> {}
+        }
+        var stringListOfElements = ""
+        for (el in elements) {
+            stringListOfElements += "$el\n"
+        }
+        return giveResponseToCmd(
+            cmdName = request.sender, response = Response(
+                request.sender,
+                ResponseStatus.TASK_COMPLETED,
+                content = "Task from ${request.sender} finished, collection cleared",
+                arg = stringListOfElements
+            ), ioStream = ioStream
+        )
+
+    }
+
+    private fun giveCollectionInfoTask(request: Request, ioStream: IOStream): Message {
+
+        return giveResponseToCmd(
+            cmdName = request.sender, response = Response(
+                request.sender,
+                ResponseStatus.TASK_COMPLETED,
+                content = "Task from ${request.sender} finished, collection cleared",
+                arg = storage.getInfo()
+            ), ioStream = ioStream
+        )
+    }
+
+    private fun countElements(request: Request, ioStream: IOStream): Message {
+        val propertyWithConditionWithValue = request.arg as RequestArg<*, *, *>
+        val conditionString = propertyWithConditionWithValue.mode as String
+        val comparingValue = propertyWithConditionWithValue.second as Long
+        val propertyName = propertyWithConditionWithValue.first as String
+        when (propertyName) {
+            "albumsCount" -> {
+                val value = comparingValue as Long
+                var numberOfElements: Int = 0
+                when (conditionString) {
+                    "LESS" -> {
+                        numberOfElements = storage.count {
+                            (it.getAlbumsCount() < value)
+                        }
+                    }
+                    "GREATER" -> {TODO()}
+                    "EQUALS" -> {TODO()}
+                }
+                return giveResponseToCmd(
+                    cmdName = request.sender, response = Response(
+                        request.sender,
+                        ResponseStatus.TASK_COMPLETED,
+                        content = "Task from ${request.sender} finished, average value of " + propertyName,
+                        arg = numberOfElements
+                    ), ioStream = ioStream
+                )
+            }
+            else -> return giveResponseToCmd(
+                cmdName = request.sender, response = Response(
+                    request.sender,
+                    ResponseStatus.TASK_COMPLETED,
+                    content = "Task from ${request.sender} finished"
+                ), ioStream = ioStream
+            )
+        }
+    }
+
+    private fun giveAverageValueTask(request: Request, ioStream: IOStream): Message {
+        when (val propertyName = request.arg as String) {
+            "numberOfParticipants" -> {
+                var sumOfNumberOfParticipants = 0
+                storage.toArray()
+                    .forEach { sumOfNumberOfParticipants += it.getNumberOfParticipants() }
+                val averageValue = sumOfNumberOfParticipants / storage.size
+                return giveResponseToCmd(
+                    cmdName = request.sender, response = Response(
+                        request.sender,
+                        ResponseStatus.TASK_COMPLETED,
+                        content = "Task from ${request.sender} finished, average value of " + propertyName,
+                        arg = averageValue
+                    ), ioStream = ioStream
+                )
+            }
+            else -> return giveResponseToCmd(
+                cmdName = request.sender, response = Response(
+                    request.sender,
+                    ResponseStatus.TASK_COMPLETED,
+                    content = "Task from ${request.sender} finished"
+                ), ioStream = ioStream
+            )
         }
     }
 
@@ -259,7 +359,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_COMPLETED,
+                    ResponseStatus.TASK_COMPLETED,
                     content = "Task from ${request.sender} finished, element added"
                 ), ioStream = ioStream
             )
@@ -268,7 +368,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_COMPLETED,
+                    ResponseStatus.TASK_COMPLETED,
                     content = "Task from ${request.sender} finished, element is not added"
                 ), ioStream = ioStream
             )
@@ -282,7 +382,7 @@ class StorageManager(
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
                 request.sender,
-                ResponseType.TASK_COMPLETED,
+                ResponseStatus.TASK_COMPLETED,
                 content = "Task from ${request.sender} finished, element added"
             ), ioStream = ioStream
         )
@@ -293,7 +393,7 @@ class StorageManager(
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
                 request.sender,
-                ResponseType.TASK_COMPLETED,
+                ResponseStatus.TASK_COMPLETED,
                 content = "Task from ${request.sender} finished, collection cleared"
             ), ioStream = ioStream
         )
@@ -313,7 +413,7 @@ class StorageManager(
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
                 request.sender,
-                ResponseType.TASK_COMPLETED,
+                ResponseStatus.TASK_COMPLETED,
                 arg = helpString,
                 content = "Task from ${request.sender} finished, collection cleared"
             ), ioStream = ioStream
@@ -328,7 +428,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_FAILED,
+                    ResponseStatus.TASK_FAILED,
                     content = "Произошла ошибка (Нет права на запись в файл), данные не сохранены"
                 ), ioStream = ioStream
             )
@@ -338,7 +438,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_COMPLETED,
+                    ResponseStatus.TASK_COMPLETED,
                     content = "Данные успешно сохранены по пути: '$pathToSaveData'"
                 ), ioStream = ioStream
             )
@@ -347,7 +447,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_FAILED,
+                    ResponseStatus.TASK_FAILED,
                     content = "Произошла ошибка (${ex.message}), данные не сохранены"
                 ), ioStream = ioStream
             )
@@ -355,13 +455,16 @@ class StorageManager(
     }
 
     private fun giveHistoryTask(request: Request, ioStream: IOStream): Message {
-        var historyString: String = "История команд:\n<...>"
+        var historyString = "История команд:\n<...>"
         for (it in 1 until history.size) {
             historyString += "\n$it\t:${history[it]}"
         }
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
-                request.sender, ResponseType.TASK_COMPLETED, content = historyString
+                request.sender,
+                ResponseStatus.TASK_COMPLETED,
+                content = "Task from ${request.sender} finished, history is given",
+                arg = historyString
             ), ioStream = ioStream
         )
     }
@@ -373,7 +476,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_FAILED,
+                    ResponseStatus.TASK_FAILED,
                     content = "Произошла ошибка. Файла не существует"
                 ), ioStream = ioStream
             )
@@ -382,7 +485,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_FAILED,
+                    ResponseStatus.TASK_FAILED,
                     content = "Произошла ошибка. Файл нельзя продолжить считывание или не " + "существует"
                 ), ioStream = ioStream
             )
@@ -398,7 +501,7 @@ class StorageManager(
             return giveResponseToCmd(
                 cmdName = request.sender, response = Response(
                     request.sender,
-                    ResponseType.TASK_FAILED,
+                    ResponseStatus.TASK_FAILED,
                     content = "Скрипт $pathToExecScript не выполнился, возникла ошибка.",
                     arg = e
                 ), ioStream = ioStream
@@ -407,7 +510,7 @@ class StorageManager(
         return giveResponseToCmd(
             cmdName = request.sender, response = Response(
                 request.sender,
-                ResponseType.TASK_COMPLETED,
+                ResponseStatus.TASK_COMPLETED,
                 content = "Скрипт $pathToExecScript успешно выполнен"
             ), ioStream = ioStream
         )

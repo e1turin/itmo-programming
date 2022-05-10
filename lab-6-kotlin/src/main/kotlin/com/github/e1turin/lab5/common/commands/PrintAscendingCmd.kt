@@ -1,26 +1,29 @@
 package com.github.e1turin.lab5.common.commands
 
-import com.github.e1turin.lab5.common.containers.Message
-import com.github.e1turin.lab5.common.containers.Response
-import com.github.e1turin.lab5.common.containers.ResponseType
+import com.github.e1turin.lab5.common.containers.*
 import com.github.e1turin.lab5.common.util.IOStream
 
-class PrintAscendingCmd(cmdName: String) :
-    Command(
-        cmdName, "Вывести элементы коллекции в порядке возрастания"
-    ) {
+class PrintAscendingCmd(cmdName: String) : Command(
+    cmdName, "Вывести элементы коллекции в порядке возрастания"
+) {
     override fun execute(arg: String, ioStream: IOStream): Message {
         ioStream.writeln("ЭЛЕМЕНТЫ КОЛЛЕКЦИИ В ПОРЯДКЕ ВОЗРАСТАНИЯ")
+        return Request(
+            cmdName,
+            RequestType.DO_TASK,
+            "GIVE_LIST_OF_ELEMENTS",
+            content = "$cmdName executed with arg=$arg, sent Request, waits Response arg as string",
+            arg = "ASCENDING"
+        )
+    }
 
-        val sortedElements = target.toArray()
-        sortedElements.sort()
-        for(i in sortedElements){
-            ioStream.writeln(i.toString())
-        }
-
+    override fun handleResponse(taskResponse: Response, ioStream: IOStream): Message {
+        val stringListOfElements = taskResponse.arg as String
+        ioStream.writeln(stringListOfElements)
         return Response(
-            cmdName, ResponseType.TASK_COMPLETED,
-            content = "$cmdName executed with argument: '$arg'"
+            cmdName,
+            ResponseStatus.TASK_COMPLETED,
+            content = "$cmdName got Response, after ${taskResponse.sender}"
         )
     }
 }

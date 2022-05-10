@@ -2,7 +2,7 @@ package com.github.e1turin.lab5.common.commands
 
 import com.github.e1turin.lab5.common.containers.Message
 import com.github.e1turin.lab5.common.containers.Response
-import com.github.e1turin.lab5.common.containers.ResponseType
+import com.github.e1turin.lab5.common.containers.ResponseStatus
 import com.github.e1turin.lab5.common.util.IOStream
 
 class ShowCmd(cmdName: String) :
@@ -18,7 +18,7 @@ class ShowCmd(cmdName: String) :
         }
         ioStream.writeln("<Конец коллекции>")
         return Response(
-            cmdName, ResponseType.TASK_COMPLETED,
+            cmdName, ResponseStatus.TASK_COMPLETED,
             content = "$cmdName executed with argument: '$arg'"
         )
     }

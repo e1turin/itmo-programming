@@ -1,11 +1,11 @@
-package com.github.e1turin.lab5.common.collection
+package com.github.e1turin.lab5.common.application
 
 import java.time.Clock
 import java.time.LocalDate
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-class MusicBandStorage(val name: String = "storage.json") {
+class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
     private val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()
     var creationDate: LocalDate = LocalDate.now(Clock.systemUTC())
@@ -71,14 +71,12 @@ class MusicBandStorage(val name: String = "storage.json") {
     }
 
     fun count(predicate: (MusicBand) -> Boolean): Int = data.count(predicate)
-    fun filter(predicate: (MusicBand) -> Boolean) {
-        for (it in data) {
-            if (!predicate(it)) {
-                data.remove(it)
-            }
-        }
+
+    fun removeIf(predicate: (MusicBand) -> Boolean) {
+        data.removeIf(predicate)
     }
 
+    fun filter(predicate: (MusicBand) -> Boolean) = data.filter(predicate)
 
     fun isEmpty() = data.isEmpty()
 

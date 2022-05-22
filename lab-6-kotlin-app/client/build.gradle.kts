@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.6.20"
+    kotlin("plugin.serialization") version "1.6.10"
     application
 }
 
@@ -15,10 +16,11 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":util"))
+//    implementation(project(":library"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
 }
 
 tasks.test {
@@ -28,7 +30,8 @@ tasks.test {
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
-java { sourceCompatibility = JavaVersion.VERSION_1_8
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 tasks.withType<JavaCompile> {
@@ -36,12 +39,15 @@ tasks.withType<JavaCompile> {
 }
 
 application {
-    mainClass.set("MainClientKt")
+    mainClass.set("com.github.e1turin.MainClientKt")
 }
 
 tasks.jar {
     archiveBaseName.set("Client-app")
     archiveVersion.set("2.0")
+    manifest {
+        attributes["Main-Class"] = "com.github.e1turin.MainClientKt"
+    }
 
     configurations["compileClasspath"].forEach { file: File -> //zip files to .jar
         from(zipTree(file.absoluteFile))

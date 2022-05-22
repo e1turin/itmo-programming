@@ -7,7 +7,5 @@ subprojects{
     repositories {
         mavenCentral()
     }
-    dependencies {
-    }
 }
 

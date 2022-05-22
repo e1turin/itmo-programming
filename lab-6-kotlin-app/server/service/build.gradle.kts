@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.10"
     application
 }
 
@@ -14,34 +15,46 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":util"))
     implementation(project(":common"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
 }
 
-tasks.test {
-    useJUnitPlatform()
+//tasks.test {
+//    useJUnitPlatform()
+//}
+kotlin {
+    jvmToolchain {
+        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))
+    }
 }
-
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }
-java { sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(8))
+    }
+//    sourceCompatibility = JavaVersion.VERSION_1_8
+//    targetCompatibility = JavaVersion.VERSION_1_8
 }
-tasks.withType<JavaCompile> {
-    options.compilerArgs.addAll(arrayOf("--release", "8"))
-}
+//tasks.withType<JavaCompile> {
+//    options.compilerArgs.addAll(arrayOf("--release", "8"))
+//}
 
 application {
-    mainClass.set("MainServerKt")
+    mainClass.set("MainServerServiceKt")
 }
 
 tasks.jar {
     archiveBaseName.set("Server-service")
     archiveVersion.set("1.0")
+    manifest {
+        attributes["Main-Class"] = "MainServerServiceKt"
+    }
 
     configurations["compileClasspath"].forEach { file: File -> //zip files to .jar
         from(zipTree(file.absoluteFile))

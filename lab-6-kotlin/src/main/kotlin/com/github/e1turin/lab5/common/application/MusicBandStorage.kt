@@ -62,12 +62,13 @@ class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
     fun hasElementWithID(id: Int): Boolean {
         if (id > lastElementId) return false
-        for (i in data) {
-            if (i.id == id) {
-                return true
-            }
-        }
-        return false
+//        for (i in data) {
+//            if (i.id == id) {
+//                return true
+//            }
+//        }
+//        return false
+        return data.any { it.id == id }
     }
 
     fun count(predicate: (MusicBand) -> Boolean): Int = data.count(predicate)

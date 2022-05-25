@@ -1,35 +1,40 @@
 package com.github.e1turin.application
 
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.time.Clock
-import java.time.LocalDate
+//import java.time.LocalDate
 import java.util.*
 import kotlin.collections.LinkedHashSet
 
-class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
+@kotlinx.serialization.Serializable
+open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
     private val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()
-    var creationDate: LocalDate = LocalDate.now(Clock.systemUTC())
+    var creationDate: LocalDate =
+        kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
-//    @JsonGetter("creationDate")
-//    fun get():String {
-//        return this.creationDate.toString()
-//    }
-//
-//    @JsonSetter("creationDate")
-//    fun set(value: String) {
-//        this.creationDate = LocalDate.parse(value)
-//    }
-
-    var size: Int
+    val size: Int
         get() = data.size
-        private set(n: Int) {}
 
     var lastElementId: Int = 0
         private set
 
-    fun nextElementId(): Int {
-        return lastElementId++
-    }
+    val info: String
+        get() {
+            return """
+            Тип коллекции: ${data.javaClass}
+            Количество элементов: ${data.size}
+            Дата инициализации: $creationDate
+            """.trimIndent()
+        }
+
+    val nextElementId: Int
+        get() {
+            return lastElementId++
+        }
 
 
     fun appendData(newData: Collection<MusicBand>) {
@@ -61,13 +66,7 @@ class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
     fun clear() = data.clear()
 
     fun hasElementWithID(id: Int): Boolean {
-        if (id > lastElementId) return false
-        for (i in data) {
-            if (i.id == id) {
-                return true
-            }
-        }
-        return false
+        return (id > lastElementId) && data.any { it.id == id }
     }
 
     fun count(predicate: (MusicBand) -> Boolean): Int = data.count(predicate)
@@ -82,13 +81,5 @@ class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
     fun deleteWithID(id: Int): Boolean = data.removeIf { it.id == id }
 
-    fun getMax(): MusicBand = Collections.max(data)
-    fun getInfo(): String {
-        return """
-        Тип коллекции: ${data.javaClass}
-        Количество элементов: ${data.size}
-        """.trimIndent()
-
-//        Дата инициализации: $creationDate
-    }
+    fun maxOrNull(): MusicBand? = data.maxOrNull()
 }

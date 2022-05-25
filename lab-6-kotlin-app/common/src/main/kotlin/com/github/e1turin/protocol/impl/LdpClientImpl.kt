@@ -3,10 +3,13 @@ package com.github.e1turin.protocol.impl
 import com.github.e1turin.protocol.api.*
 import com.github.e1turin.protocol.exceptions.LdpConnectionException
 import java.io.IOException
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.SocketAddress
+import java.net.SocketTimeoutException
 import java.net.URI
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
@@ -23,15 +26,16 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
     }
         private set
 
-    override var localHost: InetAddress = InetAddress.getLocalHost()
-        //    override var localHost: InetAddress = InetAddress.getByName("0.0.0.0")
+    //    override var localHost: InetAddress = InetAddress.getLocalHost()
+    override var localHost: InetAddress = InetAddress.getByName("0.0.0.0")
         private set
     override var localPort = -1
         private set
-    override var timeout = builder.timeout
+    override var timeout: Int = builder.timeout
         private set
     private var address: SocketAddress = InetSocketAddress(this.host, this.port)
     private lateinit var datagramChannel: DatagramChannel
+    private lateinit var datagramSocket: DatagramSocket
     override val isOpen: Boolean
         get() = if (this::datagramChannel.isInitialized) {
             datagramChannel.isOpen
@@ -50,13 +54,17 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
                 throw IOException("Could not find an available port")
             }
             datagramChannel = bindChannel(freePort)
+//            datagramSocket = datagramChannel.socket().apply { soTimeout = timeout }
             this.localPort = freePort
-            return sendRequest(
-                LdpRequest.newBuilder()
-                    .method(LdpRequest.METHOD.GET)
-                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.connect)
-                    .build()
-            )
+            try {
+                return send(
+                    LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
+                        .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.connect).build()
+                ).status
+            } catch (e: Exception) {
+                close()
+                throw e
+            }
 //            LdpOptions.StatusCode.OK
             //TODO:connect // request
         } else {
@@ -66,16 +74,14 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
     override fun disconnect(): Int {
         if (this::datagramChannel.isInitialized && this.datagramChannel.isOpen) {
-            val response = sendRequest(
-                LdpRequest.newBuilder()
-                    .method(LdpRequest.METHOD.GET)
-                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.disconnect)
-                    .build()
+            val responseStatus = sendRequest(
+                LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
+                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.disconnect).build()
             )
-            if (response == LdpOptions.StatusCode.OK) {
-                close()
-            }
-            return response
+            close()
+//            if (response == LdpOptions.StatusCode.OK) {
+//            }
+            return responseStatus
 //            LdpOptions.StatusCode.OK
             //TODO:connect // request
         } else {
@@ -91,7 +97,7 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
     private fun openChannel(): DatagramChannel {
         datagramChannel = DatagramChannel.open()
-        datagramChannel.configureBlocking(false)
+        datagramChannel.configureBlocking(true)
         return datagramChannel
     }
 
@@ -100,9 +106,7 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
         if (!this::datagramChannel.isInitialized) {
             throw LdpConnectionException("Connection not established")
         }
-        val req = LdpRequest.newBuilder(request)
-            .uri(URI("udp://${host.hostName}:${port}"))
-            .build()
+        val req = LdpRequest.newBuilder(request).uri(URI("udp://${host.hostName}:${port}")).build()
         sendRequest(req)
         return receive()
     }
@@ -116,6 +120,9 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
             //TODO: check delivered result
             response = sendPacket(packet)
             result = response.status
+            if (result == LdpOptions.StatusCode.FAIL) {
+                break
+            }
         }
         return result
     }
@@ -136,13 +143,16 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
     private fun sendPacket(packet: ByteArray): LdpResponse {
         val bufferedData = ByteBuffer.wrap(packet)
-        try {
+        return try {
             datagramChannel.send(bufferedData, address)
+            receive()
+//        } catch (e: SocketTimeoutException) {
+//            LdpResponse(LdpOptions.StatusCode.FAIL, body = "err: ${e.message}")
         } catch (e: Exception) {
-            println("datagramChannel problem")
+            println("datagramChannel problem (todo: delete this msg)")
             throw e
+//            LdpResponse(LdpOptions.StatusCode.FAIL, body = "err: ${e.message}")
         }
-        return receive()
 //        val res = receive() //TODO: receive different amount of packets
 //        //TODO: ################## wait and send again ##################
 //        return res.status == LdpOptions.StatusCode.OK
@@ -169,17 +179,51 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
 
     private fun receivePieceOfResponse(): Triple<Int, Int, String>? {
-        val buffer = ByteBuffer.allocate(512) //used only 512
-        val responseAddress: SocketAddress? = datagramChannel.receive(buffer)
-        responseAddress?.let {
-            return extractData(buffer)
+        /*
+        val selector: Selector = Selector.open()
+        datagramChannel.register(selector, SelectionKey.OP_READ)
+        if (selector.select(timeout) == 0) {
+            return null
         }
-        return null
+            for (key in selector.selectedKeys()) {
+                if (key.isReadable) {
+                    val buffer = ByteBuffer.allocate(512) //used only 512
+                    val responseAddress: SocketAddress? = datagramChannel.receive(buffer)
+//        val responseAddress: SocketAddress? = datagramSocket.receive(buffer)
+                    responseAddress?.let {
+                        return extractData(buffer)
+                    }
+
+                }
+
+            }
+         */
+
+
+//        val buffer = ByteBuffer.allocate(512) //used only 512
+        var buf = ByteArray(512)
+        val datagramPacket = DatagramPacket(buf, 512).apply {
+            socketAddress = this@LdpClientImpl.address
+        }
+        val socket = datagramChannel.socket().apply {
+            soTimeout = timeout
+        }
+        socket.receive(datagramPacket)
+//        val responseAddress: SocketAddress? = datagramPacket.socketAddress
+//        val responseAddress: SocketAddress? = datagramSocket.receive(buffer)
+//        responseAddress?.let {
+//            return extractData(buffer)
+        val byteBuf = ByteBuffer.wrap(buf, 0, datagramPacket.length)
+        return extractData(byteBuf, false)
+//        }
+//        return null
     }
 
-    private fun extractData(buffer: ByteBuffer): Triple<Int, Int, String> {
+    private fun extractData(buffer: ByteBuffer, flip: Boolean = true): Triple<Int, Int, String> {
 //        (buffer as Buffer).flip()// crutch for java 11+ -> java 8
-        buffer.flip()
+        if (flip) {
+            buffer.flip()
+        }
         val bytes = buffer.array().take(buffer.remaining())
         val packetNumber = bytes[0].toInt()
         val packetsAmount = bytes[1].toInt()
@@ -191,6 +235,8 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
         if (!this::datagramChannel.isInitialized) {//todo: is it necessary?
             throw LdpConnectionException("Connection not established")
         }
-        this.datagramChannel.close()
+        if (isOpen) {
+            this.datagramChannel.close()
+        }
     }
 }

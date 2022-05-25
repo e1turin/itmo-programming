@@ -18,10 +18,12 @@ class DisconnectCmd(cmdName: String) :
                 Manager.Opt.`do` to Manager.Task.disconnect,
             )
         )
+        io.write("Соединение разорвано ")
         if (response.status == LdpOptions.StatusCode.OK){
-            io.writeln("Соединение разорвано ")
+            io.writeln("(успешно)")
         } else {
-            io.writeln("Соединение не разорвано")
+//            io.writeln("Соединение не разорвано")
+            io.writeln("(не успешно)")
             io.writeln(response.body)
         }
 

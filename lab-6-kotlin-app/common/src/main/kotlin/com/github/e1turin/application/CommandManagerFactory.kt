@@ -7,9 +7,9 @@ class CommandManagerFactory {
         fun getInstance(): CommandManager {
             return CommandManager(
 //                LoadCmd("load"),
-//                HelpCmd("help"),
+                HelpCmd("help"),
 //                InfoCmd("info"),
-//                ShowCmd("show"),
+                ShowCmd("show"),
                 AddCmd("add"),
                 ConnectCmd("connect"),
                 DisconnectCmd("disconnect"),

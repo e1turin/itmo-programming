@@ -9,7 +9,7 @@ internal class LdpClientBuilderImpl: LdpClient.Builder {
         private set
     override var port = -1
         private set
-    override var timeout: Int = 10000
+    override var timeout: Int = 5000
         private set
 //    override lateinit var uri: URI
 //        private set

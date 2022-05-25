@@ -13,6 +13,7 @@ abstract class Manager {
         const val connect = "connect"
         const val disconnect = "disconnect"
     }
+
     object Opt {
         const val `do` = "do"
         const val single_arg = "single-arg"
@@ -21,6 +22,22 @@ abstract class Manager {
         const val greater = ">"
         const val smaller = "<"
         const val equal = "="
+        const val amount = "#"
+    }
+
+    object Value{
+        object Get {
+            const val help = "help"
+            const val info = "info"
+        }
+        object Condition{//TODO:
+//            const val all = "all"
+//            const val greater = ">"
+//            const val smaller = "<"
+//            const val equal = "="
+//            const val amount = "#"
+        }
+
     }
     abstract fun request(method: Method, args: Map<String, Any>): LdpResponse
     abstract fun stop()

@@ -2,6 +2,8 @@ package com.github.e1turin.application
 
 import com.github.e1turin.commands.*
 import com.github.e1turin.exceptions.NonexistentCommandException
+import com.github.e1turin.protocol.api.LdpHeaders
+import com.github.e1turin.protocol.api.LdpOptions
 import com.github.e1turin.protocol.api.LdpResponse
 import com.github.e1turin.util.IOStream
 import com.github.e1turin.util.Manager
@@ -16,6 +18,28 @@ class CommandManager : Manager {
     private lateinit var client: Manager
     override var WORK = true
         private set
+    val historyList: List<String>
+        get() {
+            return history
+        }
+
+    val helpAsMap: Map<String, String>
+        get() {
+            val helpMap: MutableMap<String, String> = hashMapOf()
+            for (cmd in commands.values) {
+                helpMap[cmd.cmdName] = cmd.getDescription()
+            }
+            return helpMap
+        }
+    val helpAsString: String
+        get() {
+            var helpString = "Команда | <Описание>\n"
+            for (cmd in commands.values) {
+
+                helpString += "${cmd.cmdName}\t| ${cmd.getDescription()}\n"
+            }
+            return helpString
+        }
 
 
     constructor(vararg commands: Command) {
@@ -35,7 +59,24 @@ class CommandManager : Manager {
     override fun request(method: Method, args: Map<String, Any>): LdpResponse =
         when (method) {
             Method.GET -> {
-                TODO("Todo get request")
+                when (args[Opt.`do`]) {
+                    Task.get -> {
+                        when (args[Opt.single_arg]) {
+                            Value.Get.help -> {
+                                LdpResponse(
+                                    LdpOptions.StatusCode.OK,
+                                    LdpHeaders().add(LdpHeaders.Headers.DATA, helpAsString)
+                                )
+                            }
+                            else -> { //todo: info
+                                client.request(method, args)
+                            }
+                        }
+                    }
+                    else -> {
+                        client.request(method, args)
+                    }
+                }
             }
             else -> {
                 client.request(method, args)
@@ -84,7 +125,7 @@ class CommandManager : Manager {
         return commands[cmdName]!!.execute(arg, respondent)
     }
 
-    override fun stop(){
+    override fun stop() {
         this.WORK = false
         stdio.writeln("Command manager is switched off")
         stdio.writeln("Shutting down...")
@@ -116,19 +157,9 @@ class CommandManager : Manager {
      */
 
     /*
-    fun getHistoryList(): List<String> {
-        return history
-    }
      */
 
     /*
-    fun getHelpMap(): Map<String, String> {
-        val helpMap: MutableMap<String, String> = hashMapOf()
-        for(cmd in commands.values){
-            helpMap[cmd.cmdName] = cmd.getDescription()
-        }
-        return helpMap
-    }
      */
 
 }

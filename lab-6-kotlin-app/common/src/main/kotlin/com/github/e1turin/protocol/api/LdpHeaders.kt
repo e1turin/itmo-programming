@@ -14,6 +14,7 @@ class LdpHeaders {
         const val FROM_ADDRESS = "From"
         const val REQUEST = "Request"
         const val RESPONSE = "Response"
+        const val DATA = "Data"
         object Args {
             const val FIRST_ARG = "Arg-1"
             const val SECOND_ARG = "Arg-2"
@@ -40,10 +41,16 @@ class LdpHeaders {
 
 
         }
+
+        object Args {
+            const val all = "all"
+
+        }
     }
 
-    fun add(header: String, value: String){
+    fun add(header: String, value: String): LdpHeaders{
         headers[header] = value
+        return this
     }
 
     fun hasHeader(header: String): Boolean {

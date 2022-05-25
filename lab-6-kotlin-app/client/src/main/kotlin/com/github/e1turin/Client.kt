@@ -10,6 +10,8 @@ import com.github.e1turin.util.IOStream
 import com.github.e1turin.util.serialize
 import java.io.IOException
 import java.net.InetAddress
+import java.net.SocketTimeoutException
+import java.nio.channels.AsynchronousCloseException
 
 class Client(
     override val stdio: IOStream,
@@ -31,8 +33,15 @@ class Client(
     override fun request(method: Method, args: Map<String, Any>): LdpResponse {
         try {
             return when (method) {
-                Method.GET -> {
-                    TODO("Todo get request")
+                Method.GET -> when (args[Opt.`do`] ?: "No task") {
+                    Task.get -> {
+                        requestToGet(args)
+                    }
+                    else -> {
+                        throw IOException(
+                            "Set wrong task for method GET: ${args[Opt.`do`] ?: "no  task"}"
+                        )
+                    }
                 }
                 Method.POST -> when (args[Opt.`do`] ?: "No task") {
                     Task.add -> {
@@ -72,7 +81,21 @@ class Client(
                 }
             }
         } catch (e: LdpConnectionException) {
-            return LdpResponse(LdpOptions.StatusCode.FAIL, body = "${e.message}")
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "LDP connection error: ${e.message}"
+            )
+        } catch (e: SocketTimeoutException) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Timeout error happened: ${e.message}"
+            )
+        } catch (e: AsynchronousCloseException) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Client was disconnected before: ${e.message}"
+            )
+        } catch (e: Exception) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Error message: ${e.message}"
+            )
         }
     }
 
@@ -89,6 +112,15 @@ class Client(
         val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.POST)
             .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.add)
             .header(LdpHeaders.Headers.Args.FIRST_ARG, obj.serialize()).build()
+
+        return ldpClient.send(request)
+    }
+
+    private fun requestToGet(args: Map<String, Any>): LdpResponse {
+        val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
+            .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.get)
+            .header(LdpHeaders.Headers.CONDITION, LdpHeaders.Values.Condition.amount)
+            .header(LdpHeaders.Headers.Args.FIRST_ARG, LdpHeaders.Values.Args.all).build()
 
         return ldpClient.send(request)
 

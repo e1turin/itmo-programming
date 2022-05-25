@@ -5,8 +5,10 @@ import com.github.e1turin.protocol.api.LdpRequest
 import com.github.e1turin.protocol.api.LdpResponse
 import com.github.e1turin.protocol.api.LdpServer
 import com.github.e1turin.protocol.exceptions.LdpConnectionException
+import java.net.BindException
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.ServerSocket
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
@@ -15,8 +17,9 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
     //    private val host: InetAddress
 //    private var address: SocketAddress
     private var localHost = InetAddress.getByName("0.0.0.0")
+//    private var localHost = InetAddress.getByName("localhost")
 
-    //    private var localHost = InetAddress.getLocalHost()
+//        private var localHost = InetAddress.getLocalHost()
     override var localPort: Int = if (builder.localPort < 0) {
         throw UninitializedPropertyAccessException(
             "property localPort has not been initialized " +
@@ -34,14 +37,22 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
 //        this.host = builder.host
         this.localPort = builder.localPort
         this.timeout = builder.timeout
+        println("hostname: ${localHost}")
     }
 
     override fun start() {
-        this.datagramChannel = bindChannel(localPort)
+        try {
+            this.datagramChannel = bindChannel(localPort)
+        }catch ( e: BindException){
+            localPort = ServerSocket(0).localPort
+            this.datagramChannel = bindChannel(localPort)
+            println("Port 35047 is not free, using port: $localPort")
+        }
     }
 
     private fun bindChannel(port: Int): DatagramChannel {
-        return openChannel().bind(InetSocketAddress(localHost, port))
+        return openChannel().bind(InetSocketAddress(port))
+//        return openChannel().bind(InetSocketAddress(localHost, port))
     }
 
     private fun openChannel(): DatagramChannel {
@@ -104,6 +115,7 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
     }
 
     override fun receiveResponse(): LdpResponse {
+        //TODO: ######## TIMEOUT!!! #########
         var data = ""
         var num: Int = 0
         var amount: Int = 1

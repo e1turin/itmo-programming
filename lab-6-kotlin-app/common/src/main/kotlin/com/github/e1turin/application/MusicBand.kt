@@ -60,17 +60,17 @@ data class MusicBand(
     }
 
     override fun toString(): String {
-        return """
-            MusicBand(id=$id,
-                name='$name', 
-                coordinates=$coordinates, 
-                numberOfParticipants=$numberOfParticipants, 
-                albumsCount=$albumsCount, 
-                establishmentDate=$establishmentDate, 
-                genre=$genre, 
-                label=$label, 
-                creationDate=$creationDate, 
-            )""".trimMargin()
+        return """MusicBand(id=$id,
+                    name='$name', 
+                    coordinates=$coordinates, 
+                    numberOfParticipants=$numberOfParticipants, 
+                    albumsCount=$albumsCount, 
+                    establishmentDate=$establishmentDate, 
+                    genre=$genre, 
+                    label=$label, 
+                    creationDate=$creationDate, 
+            )
+            """.trimMargin()
     }
 
 

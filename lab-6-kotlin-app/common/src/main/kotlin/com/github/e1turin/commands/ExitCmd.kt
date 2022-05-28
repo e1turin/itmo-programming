@@ -1,6 +1,5 @@
 package com.github.e1turin.commands
 
-import com.github.e1turin.application.MusicBand
 import com.github.e1turin.protocol.api.LdpOptions
 import com.github.e1turin.util.Manager
 

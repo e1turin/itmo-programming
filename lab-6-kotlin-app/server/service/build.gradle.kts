@@ -51,7 +51,7 @@ application {
 
 tasks.jar {
     archiveBaseName.set("Server-service")
-    archiveVersion.set("1.0")
+    archiveVersion.set("3.0")
     manifest {
         attributes["Main-Class"] = "MainServerServiceKt"
     }

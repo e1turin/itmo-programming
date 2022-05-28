@@ -13,17 +13,17 @@ import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 
-internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
-    //    private val host: InetAddress
-//    private var address: SocketAddress
+/**
+ * Implementation of LdpServer class
+ */
+internal class LdpServerImpl(builder: Builder) : LdpServer() {
     private var localHost = InetAddress.getByName("0.0.0.0")
 //    private var localHost = InetAddress.getByName("localhost")
+//    private var localHost = InetAddress.getLocalHost()
 
-//        private var localHost = InetAddress.getLocalHost()
     override var localPort: Int = if (builder.localPort < 0) {
         throw UninitializedPropertyAccessException(
-            "property localPort has not been initialized " +
-                    "correctly"
+            "property localPort has not been initialized correctly"
         )
     } else {
         builder.localPort
@@ -32,18 +32,18 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
     override var timeout: Int = builder.timeout
         private set
     private lateinit var datagramChannel: DatagramChannel
+    private val connections = mutableMapOf<SocketAddress, MutableMap<Int, String>>()
 
     init {
-//        this.host = builder.host
         this.localPort = builder.localPort
         this.timeout = builder.timeout
-        println("hostname: ${localHost}")
+        println("hostname: $localHost")
     }
 
     override fun start() {
         try {
             this.datagramChannel = bindChannel(localPort)
-        }catch ( e: BindException){
+        } catch (e: BindException) {
             localPort = ServerSocket(0).localPort
             this.datagramChannel = bindChannel(localPort)
             println("Port 35047 is not free, using port: $localPort")
@@ -65,20 +65,34 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
         var data = ""
         var num: Int = 0
         var amount: Int = 1
-//        var dataPart: String
-        var pieceOfReq: Triple<Int, Int, String>
+        var dataPart: String = ""
         var address: SocketAddress? = null
-        do {
+        while (true) {
             val res = receivePieceOfRequest() ?: continue
             val numAmountData = res.first
             num = numAmountData.first
             amount = numAmountData.second
-            data += numAmountData.third
+            dataPart += numAmountData.third
             address = res.second
-
-        } while (num < amount)
-        if(address != null) return LdpRequest.deserialize(data.trim()) to address
-        return null
+            if (connections[address] == null) {
+                connections[address] = mutableMapOf()
+            }
+            connections[address]!![num] = dataPart
+            if ((connections[address]?.size ?: -1) == amount) {
+                break //todo: place to concurrent processing,
+            }
+        }
+        //todo: extract outside of loop to method `processRequest()`
+        val dataParts = connections[address]?.values
+        if (address == null || dataParts == null) {
+            return null
+        }
+        for (dt in dataParts) {
+            data += dt
+        }
+//        connections.remove(address)
+        connections[address]?.clear() //TODO: timeout to clear connections
+        return LdpRequest.deserialize(data.trim()) to address
     }
 
     private fun receivePieceOfRequest(): Pair<Triple<Int, Int, String>, SocketAddress>? {
@@ -184,7 +198,7 @@ internal class LdpServerImpl(builder: LdpServer.Builder) : LdpServer() {
 
 
     override fun close() {
-        TODO("TODO: Close LdpServer")
+        datagramChannel.close()
     }
 
 }

@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.10"
     application
 }
@@ -16,7 +16,6 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-//    implementation(project(":library"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
@@ -44,7 +43,7 @@ application {
 
 tasks.jar {
     archiveBaseName.set("Client-app")
-    archiveVersion.set("2.0")
+    archiveVersion.set("3.0")
     manifest {
         attributes["Main-Class"] = "com.github.e1turin.MainClientKt"
     }

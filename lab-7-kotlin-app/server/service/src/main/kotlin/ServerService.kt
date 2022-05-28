@@ -17,6 +17,7 @@ class ServerService(
     private var WORK = true
     private val ldpServer = LdpServer.newBuilder().localPort(localPort).build()
     private val storageManager = MusicBandStorageManager(MusicBandStorage(storageName))
+//    private val storageManager = MusicBandStorageManager(MusicBandStorage(storageName))
     private val clients = mutableSetOf<SocketAddress>()
 
     fun start(args: Array<String>) {

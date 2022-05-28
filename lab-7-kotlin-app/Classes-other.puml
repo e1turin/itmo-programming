@@ -1,0 +1,42 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+package containers{
+    abstract class Message{
+        + final String sender
+        + final String content
+    }
+    enum ResponseType{
+        + NONE
+        + TASK_COMPLETED
+        + TASK_FAILED
+    }
+    class Response {
+        + final ResponseType type
+        + Object arg
+    }
+    ResponseType -l-* Response
+    Response -u-|> Message
+    enum RequestType{
+        + DO_TASK
+    }
+    class Request {
+        + final RequestType type
+        + final StorageManager.TaskType taskType
+        + final Object arg
+    }
+    RequestType -l-* Request
+    Request -l-|> Message
+}
+
+package exceptions {
+    class CallstackOverflowException <<X, #FF9999>> #FFCC99
+    class ExitScriptException <<X, #FF9999>> #FFCC99
+    class InvalidCmdArgumentException <<X, #FF9999>> #FFCC99
+    class NonexistentCommandException <<X, #FF9999>> #FFCC99
+    class NotRequestableCommandException <<X, #FF9999>> #FFCC99
+    class RecursiveScriptException <<X, #FF9999>> #FFCC99
+}
+
+
+@enduml

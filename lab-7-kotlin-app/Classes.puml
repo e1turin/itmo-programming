@@ -1,0 +1,200 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+Class Coordinates {
+    - Double x
+    - Double y
+}
+class Label {
+    - long bands
+}
+enum MusicGenre {
+    PROGRESSIVE_ROCK
+    RAP
+    BLUES
+    PUNK_ROCK
+}
+class MusicBand {
+    - Integer id
+    - String name
+    - Coordinates coordinates
+    - java.time.LocalDate creationDate {auto}
+    - int numberOfParticipants {>0}
+    - long albumsCount {>0}
+    - java.util.Date? establishmentDate
+    - MusicGenre genre
+    - Label label
+}
+
+Coordinates -d-* MusicBand::coordinates
+package exceptions{
+    object exceptions {
+        + class ExitScriptException
+        ...
+    }
+}
+exceptions -[hidden]d-> Coordinates
+Label -up-* MusicBand::label
+MusicGenre -u-* MusicBand::genre
+
+class MusicBandStorage #AAFFAA {
+    + final String name
+    - final LinkedHashSet<MusicBand> storage
+    + LocalDate creationDate
+    + int size
+    + int lastElementId
+    + int nextElementId()
+    + void appendData(Collection<MusicBand>)
+    + void makeIndices()
+    + Array<MusicBand> toArray()
+    + List<MusicBand> toList()
+    + void add(MusicBand)
+    + void clear()
+    + boolean hasElementWithID(int)
+    + int count((MusicBand)->boolean)
+    + void filter((MusicBand)->boolean)
+    + boolean isEmpty()
+    + void deleteWithID(int)
+    + MusicBand getMax()
+    + String getInfo()
+
+}
+
+MusicBand -* MusicBandStorage
+class StorageManager #AAFFAA {
+    - MusicBandStorage storage
+    - LinkedList<String> history
+    - IOStream stdIOStream
+    - MutableMap<String, Command> commands
+    - Stack<File> scriptCallStack
+    - int scriptCallStackLimit
+    + {static} enum TaskType
+    ---
+    + void loadData(File)
+    - void saveDataToFile(File)
+    + boolean validateCmd(String)
+    - Message executeCmd(String, String, IOStream)
+    - Message giveResponseToCmd(String, Response, IOStream
+    - addCmdToHistory(String)
+    - boolean callstackHasScript(Stack<File>, File)
+    - void clearStorage()
+    + void setCreationDate(LocalDate)
+    + loop(IOStream)
+    + Message doTask(Request, IOStream)
+    --tasks--
+    - Message exitTask(Request,IOStream)
+    - Message clearCollectionTask(Request, IOStream)
+    - Message giveHelpTask(Request, IOStream)
+    - Message saveDataTask(Request, IOStream)
+    - Message execScriptTask(Request, IOStream)
+
+}
+
+package containers{
+    object containers {
+        + abstract class Message
+        + class Request
+        + class Response
+        ...
+    }
+}
+containers -[hidden]d-> TaskType
+
+enum TaskType {
+    + NONE
+    + EXIT
+    + GIVE_HELP
+    + LOAD_DATA
+    + CLEAR_COLLECTION
+    + GIVE_HISTORY
+    + EXEC_SCRIPT
+    + SAVE_DATA
+}
+
+TaskType -d-o StorageManager
+package commands {
+abstract class Command {
+    - String cmdName {get}
+    - String description {get}
+
+    ~ {abstract}Message exec(String, MusicBandStorage, IOStream)
+}
+
+interface Requestable{
+    + exec(Request,IOStream,MusicBandStorage)
+}
+Requestable .. Command
+}
+
+
+
+
+
+class JavaDoc << (J, #FFCC99)>> #FFDD99
+Main .u.> JavaDoc
+
+
+class com.google.gson.GsonBuilder << (J, #FFCC99)>> #FFDD99
+StorageManager o-- com.google.gson.GsonBuilder
+
+
+class java.io.InputStreamReader << (C, #EEAAAA) >> #EFCCCC
+class java.io.PrintWriter << (C, #EEAAAA) >> #EFCCCC
+StorageManager o-- java.io.InputStreamReader
+StorageManager o-- java.io.PrintWriter
+
+
+class java.util.LinkedHashSet << (C, #EEAAAA) >> #EFCCCC
+MusicBandStorage *-d- java.util.LinkedHashSet
+
+package util {
+    IOStream -l-o StorageManager
+    interface IDateValidator {
+        + boolean isValid(String)
+    }
+    class DateValidator {
+        - final String dateFormat
+    }
+    DateValidator -u-|> IDateValidator
+    DateValidator <-[hidden]d- IOStream
+    class IOStream << (C, #EEEE99)>> #FFEE99{
+        + final Writer writer
+        + boolean interactive
+        - final Scanner scanner
+        + void write(String)
+        + void writeln(String)
+        + void writetermsep(String)
+        + <T> T termInput(String, String, ()->T)
+        + <T> T termInputUntil(
+        String, String, String,(T)->boolean, ()->T
+        )
+        + booleanq canRead()
+        + boolean yesAnswer()
+        + String read()
+        + String readBlankOrNull()
+        + String readLine()
+        + Integer readIntOrNull()
+        + Long readLongOrNull()
+        + Double readDoubleOrNull()
+        - Coordinates readCoordinates()
+        - MusicGenre readMusicGenre()
+        - Label readLable()
+        - Date readDate(String, String)
+        - Date readEstablishmentDate(String, String)
+        + MusicBand readMusicBand()
+        + String readFileName(String)
+        + Pair<String,String> readCmdWithArg()
+    }
+    class LocalDateAdapter
+    LocalDateAdapter <-[hidden]u- IOStream
+}
+LocalDateAdapter .> com.google.gson.GsonBuilder
+Command --o StorageManager
+'(Command,StorageManager) - ICommand
+
+MusicBandStorage -* StorageManager
+
+StorageManager -up-* Main
+
+
+@enduml

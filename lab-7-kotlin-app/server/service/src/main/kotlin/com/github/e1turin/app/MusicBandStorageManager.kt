@@ -1,4 +1,4 @@
-package com.github.e1turin.application
+package com.github.e1turin.app
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -8,8 +8,8 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 
-class MusicBandStorageManager(musicBandStorage: MusicBandStorage) {
-    private val store = musicBandStorage
+internal open class MusicBandStorageManager(musicBandStorage: MusicBandStorage) {
+    protected val store = musicBandStorage
     val dataAsList: List<MusicBand>
         get() {
             return store.toList()
@@ -17,9 +17,9 @@ class MusicBandStorageManager(musicBandStorage: MusicBandStorage) {
 
     val storeSize: Int get() = store.size
 
-    val storageName: String get() = store.name
+    val storeName: String get() = store.name
 
-    fun info(): String {
+    open fun info(): String {
         return store.info
     }
 
@@ -53,26 +53,37 @@ class MusicBandStorageManager(musicBandStorage: MusicBandStorage) {
         }
     }
 
-    fun clearStore() {
+    open fun clearStore() {
         store.clear()
-        saveDataTo(File(store.name))
+//        saveDataTo(File(store.name))
     }
 
-    fun addElement(obj: MusicBand) {
+    open fun addElement(obj: MusicBand) {
         store.add(obj)
-        saveDataTo(File(store.name))
+//        saveDataTo(File(store.name))
     }
 
-    fun removeIf(predicate: (MusicBand) -> Boolean) {
+    protected fun removeIf(predicate: (MusicBand) -> Boolean) {
         store.removeIf(predicate)
-        saveDataTo(File(store.name))
+//        saveDataTo(File(store.name))
+    }
+    fun find(predicate: (MusicBand) -> Boolean): MusicBand? {
+        return store.find(predicate)
     }
 
-    fun count(predicate: (MusicBand) -> Boolean) = store.count(predicate)
+    protected fun findId(predicate: (MusicBand) -> Boolean): Int? {
+        return store.find(predicate)?.id
+    }
 
-    fun filter(predicate: (MusicBand) -> Boolean) {
-        store.filter(predicate)
-        saveDataTo(File(store.name))
+    open fun count(predicate: (MusicBand) -> Boolean) = store.count(predicate)
+
+    open fun filter(predicate: (MusicBand) -> Boolean): List<MusicBand> {
+        return store.filter(predicate)
+//        saveDataTo(File(store.name))
+    }
+
+    fun slice(range: IntRange): List<MusicBand> {
+        return store.slice(range)
     }
 
 

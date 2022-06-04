@@ -16,7 +16,7 @@ class HelpCmd(cmdName: String) :
             Manager.Method.GET,
             mapOf(
                 Manager.Opt.`do` to Manager.Task.get,
-                Manager.Opt.single_arg to Manager.Value.Get.help
+                Manager.Opt.first_arg to Manager.Value.Get.help
             )
         )
         if (response.status == LdpOptions.StatusCode.OK) {

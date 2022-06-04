@@ -1,4 +1,4 @@
-package com.github.e1turin.application
+package com.github.e1turin.app
 
 import com.github.e1turin.commands.*
 

@@ -1,6 +1,6 @@
 package com.github.e1turin.commands
 
-import com.github.e1turin.application.MusicBand
+import com.github.e1turin.app.MusicBand
 import com.github.e1turin.protocol.api.LdpHeaders
 import com.github.e1turin.protocol.api.LdpOptions
 import com.github.e1turin.util.Manager
@@ -21,7 +21,7 @@ class ShowCmd(cmdName: String) :
             mapOf(
                 Manager.Opt.`do` to Manager.Task.get,
                 Manager.Opt.condition to Manager.Opt.amount,
-                Manager.Opt.single_arg to Manager.Opt.all
+                Manager.Opt.first_arg to Manager.Opt.all
             )
         )
         if (response.status == LdpOptions.StatusCode.OK) {

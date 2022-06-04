@@ -1,4 +1,4 @@
-package com.github.e1turin.application
+package com.github.e1turin.app
 
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -16,14 +16,14 @@ import kotlinx.datetime.todayAt
 
 @Serializable
 data class MusicBand(
-    private val name: String,
-    private val coordinates: Coordinates,
-    private val numberOfParticipants: Int,
-    private val albumsCount: Long,
+    val name: String,
+    val coordinates: Coordinates,
+    val numberOfParticipants: Int,
+    val albumsCount: Long,
 //    @Serializable(with = DateSerializer::class) private val establishmentDate: Date?,
-    private val establishmentDate: LocalDate?,
-    private val genre: MusicGenre,
-    private val label: Label
+    val establishmentDate: LocalDate?,
+    val genre: MusicGenre,
+    val label: Label
 ) : Comparable<MusicBand> {
 
 //    @JsonSetter("establishmentDate")
@@ -36,8 +36,8 @@ data class MusicBand(
     var id: Int = -1
         private set
 
-    fun getNumberOfParticipants() = numberOfParticipants
-    fun getAlbumsCount(): Long = albumsCount
+//    fun getNumberOfParticipants() = numberOfParticipants
+//    fun getAlbumsCount(): Long = albumsCount
 
     fun setId(id: Int) {
         this.id = id

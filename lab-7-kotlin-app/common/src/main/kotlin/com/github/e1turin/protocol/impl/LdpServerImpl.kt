@@ -43,6 +43,7 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
     override fun start() {
         try {
             this.datagramChannel = bindChannel(localPort)
+            println("Using port 35047")
         } catch (e: BindException) {
             localPort = ServerSocket(0).localPort
             this.datagramChannel = bindChannel(localPort)

@@ -1,6 +1,6 @@
 package com.github.e1turin.commands
 
-import com.github.e1turin.application.MusicBand
+import com.github.e1turin.app.MusicBand
 import com.github.e1turin.protocol.api.LdpOptions
 import com.github.e1turin.util.Manager
 
@@ -19,7 +19,7 @@ class AddCmd(cmdName: String) :
             Manager.Method.POST,
             mapOf(
                 Manager.Opt.`do` to Manager.Task.add,
-                Manager.Opt.single_arg to musicBand
+                Manager.Opt.first_arg to musicBand
             )
         )
         if (response.status == LdpOptions.StatusCode.OK){

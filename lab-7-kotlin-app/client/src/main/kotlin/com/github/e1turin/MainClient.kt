@@ -1,6 +1,6 @@
 package com.github.e1turin
 
-import com.github.e1turin.application.CommandManagerFactory
+import com.github.e1turin.app.CommandManagerFactory
 import com.github.e1turin.util.IOStream
 import java.io.BufferedReader
 import java.io.BufferedWriter

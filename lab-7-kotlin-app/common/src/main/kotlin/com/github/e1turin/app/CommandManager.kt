@@ -1,16 +1,16 @@
-package com.github.e1turin.application
+package com.github.e1turin.app
 
-import com.github.e1turin.commands.*
+import com.github.e1turin.commands.Command
 import com.github.e1turin.exceptions.NonexistentCommandException
 import com.github.e1turin.protocol.api.LdpHeaders
 import com.github.e1turin.protocol.api.LdpOptions
 import com.github.e1turin.protocol.api.LdpResponse
 import com.github.e1turin.util.IOStream
 import com.github.e1turin.util.Manager
-import java.util.HashMap
-import java.util.LinkedList
+import kotlinx.coroutines.channels.Channel
+import java.util.*
 
-class CommandManager : Manager {
+class CommandManager(vararg commands: Command) : Manager() {
     private val commands: MutableMap<String, Command> = HashMap<String, Command>()
     private val history: MutableList<String> = LinkedList()
     override lateinit var stdio: IOStream
@@ -18,11 +18,18 @@ class CommandManager : Manager {
     private lateinit var client: Manager
     override var WORK = true
         private set
+    private val cmdChannel = Channel<Command>()
+
+    init {
+        for (command in commands) {
+            this.commands[command.cmdName] = command
+        }
+    }
+
     val historyList: List<String>
         get() {
             return history
         }
-
     val helpAsMap: Map<String, String>
         get() {
             val helpMap: MutableMap<String, String> = hashMapOf()
@@ -36,17 +43,10 @@ class CommandManager : Manager {
             var helpString = "Команда | <Описание>\n"
             for (cmd in commands.values) {
 
-                helpString += "${cmd.cmdName}\t| ${cmd.getDescription()}\n"
+                helpString += "${cmd.cmdName}\t: ${cmd.getDescription()}\n"
             }
             return helpString
         }
-
-
-    constructor(vararg commands: Command) {
-        for (command in commands) {
-            this.commands[command.cmdName] = command
-        }
-    }
 
     fun attachManager(respondent: Manager) {
         this.client = respondent
@@ -56,35 +56,38 @@ class CommandManager : Manager {
         stdio = ioStream
     }
 
-    override fun request(method: Method, args: Map<String, Any>): LdpResponse =
-        when (method) {
-            Method.GET -> {
-                when (args[Opt.`do`]) {
-                    Task.get -> {
-                        when (args[Opt.single_arg]) {
-                            Value.Get.help -> {
-                                LdpResponse(
-                                    LdpOptions.StatusCode.OK,
-                                    LdpHeaders().add(LdpHeaders.Headers.DATA, helpAsString)
-                                )
-                            }
-                            else -> { //todo: info
-                                client.request(method, args)
-                            }
-                        }
-                    }
-                    else -> {
-                        client.request(method, args)
-                    }
-                }
-            }
+    override fun request(method: Method, args: Map<String, Any>): LdpResponse {
+        return when (method) {
+            Method.GET -> handleMethodGet(args)
             else -> {
                 client.request(method, args)
             }
         }
+    }
 
+    private fun handleMethodGet(args: Map<String, Any>): LdpResponse {
+        return when (args[Opt.`do`]) {
+            Task.get -> {
+                when (args[Opt.first_arg]) {
+                    Value.Get.help -> {
+                        LdpResponse(
+                            LdpOptions.StatusCode.OK,
+                            LdpHeaders().add(LdpHeaders.Headers.DATA, helpAsString)
+                        )
+                    }
+                    else -> { //todo: info
+                        client.request(Method.GET, args)
+                    }
+                }
+            }
+            else -> {
+                client.request(Method.GET, args)
+            }
+        }
 
-    fun loop() {
+    }
+
+    fun loop() { //todo: runBlocking | IO
         while (WORK) {
             val cmdWithArg = getValidCmdWithArg(stdio)
             val cmdName = cmdWithArg.first
@@ -130,36 +133,4 @@ class CommandManager : Manager {
         stdio.writeln("Command manager is switched off")
         stdio.writeln("Shutting down...")
     }
-    /*
-    private fun executeCmd(cmdName: String, arg: String, ioStream: IOStream=stdio): LdpRequest {
-        attachToHistory(cmdName)
-        return commands[cmdName]!!.execute(arg, ioStream)
-    }
-     */
-    /*
-    fun processCmd(cmdName: String, arg: String, ioStream: IOStream=stdio): LdpRequest {
-        if (!validateCmd(cmdName)) {
-            throw NonexistentCommandException(
-                "Attempt to execute nonexistent command"
-            )
-        }
-        return executeCmd(cmdName, arg, this)
-    }
-     */
-
-    /*
-    fun giveResponseToCmd(
-        cmdName: String, response: LdpResponse, ioStream: IOStream=stdio
-    ): LdpResponse {
-        val cmd = commands[cmdName]!!
-        return cmd.handleResponse(response, ioStream)
-    }
-     */
-
-    /*
-     */
-
-    /*
-     */
-
 }

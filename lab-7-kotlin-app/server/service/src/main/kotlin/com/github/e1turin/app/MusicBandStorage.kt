@@ -1,15 +1,14 @@
-package com.github.e1turin.application
+package com.github.e1turin.app
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-//import java.time.LocalDate
 import kotlin.collections.LinkedHashSet
 
 @kotlinx.serialization.Serializable
-open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
+internal open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
-    private val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()
+    protected val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()
     var creationDate: LocalDate =
         kotlinx.datetime.Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
@@ -34,11 +33,11 @@ open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
         }
 
 
-    fun appendData(newData: Collection<MusicBand>) {
+    open fun appendData(newData: Collection<MusicBand>) {
         data.addAll(newData)
     }
 
-    fun makeIndices() {
+    open fun makeIndices() {
         var id = 1
         for (it in data) {
             it.setId(id++)
@@ -52,27 +51,35 @@ open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
         return array
     }
 
+    fun slice(range: IntRange): List<MusicBand> {
+        return toArray().slice(range)
+    }
+
     fun toList(): List<MusicBand> {
         return data.toList()
     }
 
-    fun add(musicBand: MusicBand) {
+    open fun add(musicBand: MusicBand) {
         data.add(musicBand)
     }
 
-    fun clear() = data.clear()
+    open fun clear() = data.clear()
 
     fun hasElementWithID(id: Int): Boolean {
         return (id > lastElementId) && data.any { it.id == id }
     }
 
-    fun count(predicate: (MusicBand) -> Boolean): Int = data.count(predicate)
+    open fun count(predicate: (MusicBand) -> Boolean): Int = data.count(predicate)
 
-    fun removeIf(predicate: (MusicBand) -> Boolean) {
+    open fun removeIf(predicate: (MusicBand) -> Boolean) {
         data.removeIf(predicate)
     }
 
-    fun filter(predicate: (MusicBand) -> Boolean) = data.filter(predicate)
+    open fun find(predicate: (MusicBand) -> Boolean): MusicBand? {
+        return data.find(predicate)
+    }
+
+    open fun filter(predicate: (MusicBand) -> Boolean) = data.filter(predicate)
 
     fun isEmpty() = data.isEmpty()
 

@@ -1,9 +1,9 @@
 package com.github.e1turin.util
 
-import com.github.e1turin.application.Coordinates
-import com.github.e1turin.application.Label
-import com.github.e1turin.application.MusicBand
-import com.github.e1turin.application.MusicGenre
+import com.github.e1turin.app.Coordinates
+import com.github.e1turin.app.Label
+import com.github.e1turin.app.MusicBand
+import com.github.e1turin.app.MusicGenre
 import com.github.e1turin.exceptions.InvalidCmdArgumentException
 import kotlinx.datetime.LocalDate
 //import com.github.e1turin.util.DateValidator
@@ -201,9 +201,9 @@ class IOStream(
         writeln(message)
         val name: String = termInputUntil(
             sep = "name =",
-            message = "Введите имя группы",
+            message = "Введите имя группы (не более 50 символов)",
             hint = "Имя группы не может быть пустым!",
-            condition = { it != null && it.isNotBlank() },
+            condition = { it != null && it.isNotBlank() && it.length<=50},
             query = { readNotBlankLineOrNull() }
         ) ?: throw InvalidCmdArgumentException("reading Music Band: name")
         val coordinates: Coordinates = readCoordinates("Введите координаты, значение coordinates")

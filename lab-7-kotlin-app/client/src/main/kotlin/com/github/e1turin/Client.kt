@@ -75,27 +75,78 @@ class Client(
     }
 
     private fun handleMethodAuth(args: Map<String, Any>): LdpResponse {
-        return when (args[Opt.`do`]?: "No task"){
+        when (args[Opt.`do`] ?: "No task") {
             Task.Auth.login -> {
-                TODO("TODO: Task.Auth.login")
+                println("currlogin $username")
+                println("currpass $password")
+                if (this.username != null) return LdpResponse(
+                    LdpOptions.StatusCode.FAIL,
+                    body = "User already logged in, you should log out before"
+                )
+                val login = (args[Opt.Auth.login] ?: return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "There is no login"
+                )) as String
+                if (login.isBlank()) return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "Login is empty"
+                )
+                val passwd = (args[Opt.Auth.password] ?: return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "There is no password"
+                )) as String
+                if (passwd.isBlank()) return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "Password is empty"
+                )
+                ldpClient.setLogin(login)
+                ldpClient.setPassword(passwd)
+
+                val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
+                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.auth)
+                    .header(LdpHeaders.Headers.USER, login)
+                    .header(LdpHeaders.Headers.PASSWD, passwd)
+                    .build()
+
+                val response = ldpClient.send(request)
+                return if (response.status == LdpOptions.StatusCode.OK) {
+                    username = login
+                    password = passwd
+                    LdpResponse(LdpOptions.StatusCode.OK, body = response.body)
+                } else {
+                    ldpClient.deleteUser()
+                    LdpResponse(LdpOptions.StatusCode.FAIL, body = response.body)
+                }
             }
             Task.Auth.logout -> {
-                if (username == null) TODO("TODO: Task.Auth.logout.already logged out")
-                username == null
-                password == null
-                TODO("TODO: Task.Auth.logout")
+                if (username == null) {
+                    return LdpResponse(LdpOptions.StatusCode.FAIL, body = "User is not authorised")
+                }
+                ldpClient.deleteUser()
+                username = null
+                password = null
+                return LdpResponse(LdpOptions.StatusCode.OK, body = "Successfully logged out")
             }
             Task.Auth.signup -> {
-                TODO("TODO: Task.Auth.signup")
+                if (this.username != null) return LdpResponse(
+                    LdpOptions.StatusCode.FAIL,
+                    body = "User already logged in, you should log out before"
+                )
+                val login = (args[Opt.Auth.login] ?: return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "There is no login"
+                )) as String
+                val passwd = (args[Opt.Auth.password] ?: return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "There is no password"
+                )) as String
+                val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.POST)
+                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.auth)
+                    .header(LdpHeaders.Headers.USER, login)
+                    .header(LdpHeaders.Headers.PASSWD, passwd)
+                    .build()
+
+                return ldpClient.send(request)
             }
             Task.Auth.signout -> {
-                if (username == null) TODO("TODO: Task.Auth.signout.already signed out")
-                username == null
-                password == null
                 TODO("TODO: Task.Auth.signout")
             }
             else -> {
-                throw IOException("Set wrong task for method CONNECT: ${args[Opt.`do`] ?: "No task"} ")
+                throw IOException("Set wrong task for method AUTH: ${args[Opt.`do`] ?: "No task"} ")
             }
         }
 
@@ -128,8 +179,15 @@ class Client(
             Task.add -> {
                 requestToAdd(args)
             }
-            Task.clear -> { //todo: rename remove:all
-                TODO("Todo clear request")
+            Task.clear -> {
+                val id = args[Opt.first_arg] as String
+                val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.POST)
+                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.remove)
+                    .header(LdpHeaders.Headers.CONDITION, LdpHeaders.Values.Condition.property)
+                    .header(LdpHeaders.Headers.Condition.property, "id")
+                    .header("id", id).build()
+
+                return ldpClient.send(request)
             }
             Task.update -> {
                 TODO("Todo update request")

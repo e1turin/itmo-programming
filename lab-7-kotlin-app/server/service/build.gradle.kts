@@ -1,8 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
+    kotlin("jvm") version "1.6.20"
+//    kotlin("plugin.serialization") version "1.6.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.20"
     application
 }
 
@@ -18,8 +19,9 @@ dependencies {
     implementation(project(":common"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+
     implementation("org.jetbrains.exposed", "exposed-core", "0.38.1")
     implementation("org.jetbrains.exposed", "exposed-dao", "0.38.1")
     implementation("org.jetbrains.exposed", "exposed-jdbc", "0.38.1")

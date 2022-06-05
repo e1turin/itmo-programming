@@ -43,6 +43,10 @@ abstract class Manager {
         const val smaller = "<"
         const val equal = "="
         const val amount = "#"
+        object Auth {
+            const val login = "login"
+            const val password = "password"
+        }
     }
 
     object Value{

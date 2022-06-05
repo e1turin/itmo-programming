@@ -70,7 +70,7 @@ class IOStream(
     fun canRead(): Boolean = scanner.hasNext();
     fun canReadLine(): Boolean = scanner.hasNextLine();
     fun yesAnswer(): Boolean {
-        return arrayOf("yes", "y", "Yes", "Y").contains(scanner.nextLine())
+        return arrayOf("yes", "y", "Yes", "Y").contains(readLineWord())
     }
 
 
@@ -78,13 +78,8 @@ class IOStream(
      * Bad to use, as leaves trailing '\n', should be used wish readLine()
      */
     fun read(): String = scanner.next()
-
-    fun readLineNotBlankOrNull(): String? {
-        val input = readLine()
-        return input.ifBlank {
-            null
-        }
-    }
+    fun readLine(): String = scanner.nextLine()
+    fun readLineWord(): String = readLine().trim()
 
     fun readNotBlankLineOrNull(): String? {
         val input = readLine()
@@ -93,7 +88,6 @@ class IOStream(
         }
     }
 
-    fun readLine(): String = scanner.nextLine()
 
     fun readLineIntOrNull(): Int? {
         return readLine().trim().toIntOrNull()
@@ -152,7 +146,7 @@ class IOStream(
             condition = {
                 it != null && it.uppercase() in MusicGenre.values().map { value -> value.name }
             },
-            query = { readLineNotBlankOrNull() }
+            query = { readNotBlankLineOrNull() }
         )?.uppercase() ?: throw InvalidCmdArgumentException("reading Music Genre: blank value")
         if (musicGenreName !in MusicGenre.values()
                 .map { value -> value.name }

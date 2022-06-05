@@ -6,6 +6,7 @@ import com.github.e1turin.database.RolesTable
 import com.github.e1turin.database.UsersTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.io.IOException
@@ -15,7 +16,6 @@ import java.time.Instant
 internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     MusicBandStorageManager(musicBandStorage) {
     protected val db = Database.connect(
-//        url = System.getenv("dbUrl"),
         url = "jdbc:postgresql://pg:5432/studs",
         driver = "org.postgresql.Driver",
         user = System.getenv("username"),
@@ -26,7 +26,9 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     private val roles = RolesTable
 
     init {
-        SchemaUtils.createMissingTablesAndColumns(users, musicBands, roles)
+        transaction(db) {
+            SchemaUtils.createMissingTablesAndColumns(users, musicBands, roles)
+        }
     }
 
     @kotlin.jvm.Throws(SQLException::class, ExposedSQLException::class)
@@ -64,6 +66,7 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
         if (ex == null) super.addElement(obj.apply { setId(id!!.value) })
         else throw ex
     }
+
     @kotlin.jvm.Throws(SQLException::class, ExposedSQLException::class)
     fun addElementWithOwner(obj: MusicBand, creator: String) {
         val (ex, id) = transaction(db) {
@@ -73,7 +76,7 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
                     it[coord_x] = obj.coordinates.x
                     it[coord_y] = obj.coordinates.y
                     it[albums_count] = obj.albumsCount
-                    it[establishment] = DateTime(obj.establishmentDate ?: Instant.now())
+//                    it[establishment] = DateTime(obj.establishmentDate ?: Instant.now())
                     it[genre] = obj.genre.name
                     it[label] = obj.label.bands
                     it[owner] = (users.select { users.name eq creator }.first()[users.id])
@@ -114,7 +117,7 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
                     it[coord_x] = obj.coordinates.x
                     it[coord_y] = obj.coordinates.y
                     it[albums_count] = obj.albumsCount
-                    it[establishment] = DateTime(obj.establishmentDate ?: Instant.now())
+//                    it[establishment] = DateTime(obj.establishmentDate)
                     it[genre] = obj.genre.name
                     it[label] = obj.label.bands
                 })
@@ -155,7 +158,11 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
         return role!!
     }
 
-    @kotlin.jvm.Throws(SQLException::class, ExposedSQLException::class, NoSuchElementException::class)
+    @kotlin.jvm.Throws(
+        SQLException::class,
+        ExposedSQLException::class,
+        NoSuchElementException::class
+    )
     fun checkPassword(login: String, checking_password: String): Boolean {
         val (ex, password) = transaction(db) {
             try {
@@ -171,7 +178,11 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
         return password == checking_password
     }
 
-    @kotlin.jvm.Throws(SQLException::class, ExposedSQLException::class, NoSuchElementException::class)
+    @kotlin.jvm.Throws(
+        SQLException::class,
+        ExposedSQLException::class,
+        NoSuchElementException::class
+    )
     fun getOwnerLoginByObjId(id: Int): String {
         val (ex, login) = transaction(db) {
             try {
@@ -196,23 +207,53 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
             getRoleByUserid(objId) in listOf(
                 login, DatabaseOpts.Roles.admin, DatabaseOpts.Roles.editor
             )
-        }catch (_: Exception){ false }
+        } catch (_: Exception) {
+            false
+        }
     }
 
     fun authoriseNewUser(login: String, encryptedPasswd: String) {
         val ex = transaction(db) {
-            try{
+            try {
+                val roleid = roles.select { roles.role eq DatabaseOpts.Roles.common }.first()[roles
+                    .id]
                 users.insert {
                     it[name] = login
                     it[password] = encryptedPasswd
-                    it[role] = (roles.select { name eq DatabaseOpts.Roles.common }.first()[roles.id])
+                    it[role] = roleid
                 }
                 return@transaction null
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 return@transaction e
             }
         }
         if (ex != null) throw ex
+    }
+
+    fun loadDataFromDatabase() {
+        val (ex, list) = transaction(db) {
+            try {
+                val data = musicBands.selectAll().limit(100).map { it ->
+                    MusicBand(
+                        it[MusicBandsTable.name],
+                        Coordinates(
+                            it[MusicBandsTable.coord_x],
+                            it[MusicBandsTable.coord_y]
+                        ),
+                        4,
+                        it[MusicBandsTable.albums_count],
+                        null,
+                        MusicGenre.valueOf(it[MusicBandsTable.genre]),
+                        Label(it[MusicBandsTable.label])
+                    )
+                }
+                return@transaction null to data
+            } catch (e: Exception) {
+                return@transaction e to null
+            }
+        }
+        store.appendData(list ?: listOf())
+
     }
 
 }

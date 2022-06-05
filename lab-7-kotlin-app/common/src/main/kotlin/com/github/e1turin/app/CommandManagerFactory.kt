@@ -6,6 +6,9 @@ class CommandManagerFactory {
     companion object {
         fun getInstance(): CommandManager {
             return CommandManager(
+                SignUpCmd("signup"),
+                LogoutCmd("logout"),
+                LoginCmd("login"),
 //                LoadCmd("load"),
                 HelpCmd("help"),
 //                InfoCmd("info"),
@@ -14,7 +17,7 @@ class CommandManagerFactory {
                 ConnectCmd("connect"),
                 DisconnectCmd("disconnect"),
 //                UpdateWithIDCmd("update"),
-//                RemoveWithIDCmd("remove_by_id"),
+                RemoveWithIDCmd("remove_by_id"),
 //                ClearCmd("clear"),
 //            SaveCmd("save"),
 //                ExecuteScriptCmd("execute_script"),

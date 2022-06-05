@@ -1,9 +1,11 @@
-import com.github.e1turin.app.*
+import com.github.e1turin.app.MusicBand
 import com.github.e1turin.app.MusicBandDatabaseManager
 import com.github.e1turin.app.MusicBandStorage
+import com.github.e1turin.app.MusicGenre
 import com.github.e1turin.protocol.api.*
 import com.github.e1turin.util.IOStream
 import com.github.e1turin.util.sha256
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -23,17 +25,18 @@ class ServerService(
 
     fun start(args: Array<String>) {
         ldpServer.use {
-            start(args)
+            it.start()
             loop()
         }
     }
 
     fun stop() {
         WORK = false
-        storageManager.saveDataTo(File(storageManager.storeName))
+//        storageManager.saveDataTo(File(storageManager.storeName))
     }
 
-    private fun loop() {
+    private fun loop() = runBlocking{
+        storageManager.loadDataFromDatabase()
         while (WORK) {
             stdio.writeln("Is waiting request...")
             val (request, address) = ldpServer.receiveRequest() ?: continue
@@ -63,20 +66,10 @@ class ServerService(
 
     private fun handleRequestMethodPost(request: LdpRequest, address: SocketAddress): LdpResponse {
         val login = request.headers[LdpHeaders.Headers.USER] ?: return LdpResponse(
-            LdpOptions.StatusCode.FAIL, body = "Not authorised user"
+            LdpOptions.StatusCode.FAIL, body = "No login get user"
         )
         val password = request.headers[LdpHeaders.Headers.PASSWD]?.sha256() ?: return LdpResponse(
             LdpOptions.StatusCode.FAIL, body = "Password is required but got no such one"
-        )
-        val isValidUser = try {
-            storageManager.checkPassword(login, password)
-        } catch (e: Exception) {
-            return LdpResponse(
-                LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
-            )
-        }
-        if (!isValidUser) return LdpResponse(
-            LdpOptions.StatusCode.FAIL, body = "Wrong password"
         )
         return when (request.headers[LdpHeaders.Headers.CMD_NAME]) {
             LdpHeaders.Values.Cmd.add -> handleRequestMethodPostCmdAdd(request)
@@ -86,11 +79,22 @@ class ServerService(
             LdpHeaders.Values.Cmd.update -> handleRequestMethodPostCmdUpdate(request)
 
             LdpHeaders.Values.Cmd.auth -> {
+                if (login.isBlank()) return LdpResponse(LdpOptions.StatusCode.FAIL,
+                body="empty login")
+                val isValidUser = try {
+                    storageManager.checkPassword(login, password)
+                } catch (_: Exception) {
+                    false
+                }
+                if (isValidUser) return LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "User already authorised"
+                )
+                println("user not valid -ok")
                 return try {
                     storageManager.authoriseNewUser(login, password)
                     LdpResponse(LdpOptions.StatusCode.OK, body = "New user is authorised")
                 } catch (e: Exception) {
-                    LdpResponse(LdpOptions.StatusCode.FAIL, body = "User is not authorised")
+                    LdpResponse(LdpOptions.StatusCode.FAIL, body = "User is not authorised ($e)")
                 }
             }
 
@@ -104,6 +108,17 @@ class ServerService(
 
     private fun handleRequestMethodPostCmdUpdate(request: LdpRequest): LdpResponse {
         val login = request.headers[LdpHeaders.Headers.USER]!!
+        val password = request.headers[LdpHeaders.Headers.PASSWD]!!.sha256()
+        val isValidUser = try {
+            storageManager.checkPassword(login, password)
+        } catch (e: Exception) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
+            )
+        }
+        if (!isValidUser) return LdpResponse(
+            LdpOptions.StatusCode.FAIL, body = "Wrong password"
+        )
         when (request.headers[LdpHeaders.Headers.CONDITION]) {
             LdpHeaders.Values.Condition.property -> {
                 when (request.headers[LdpHeaders.Headers.Condition.property]) {
@@ -163,6 +178,17 @@ class ServerService(
 
     private fun handleRequestMethodPostCmdRemove(request: LdpRequest): LdpResponse {
         val login = request.headers[LdpHeaders.Headers.USER]!!
+        val password = request.headers[LdpHeaders.Headers.PASSWD]!!.sha256()
+        val isValidUser = try {
+            storageManager.checkPassword(login, password)
+        } catch (e: Exception) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
+            )
+        }
+        if (!isValidUser) return LdpResponse(
+            LdpOptions.StatusCode.FAIL, body = "Wrong password"
+        )
         when (request.headers[LdpHeaders.Headers.CONDITION]) {
             LdpHeaders.Values.Condition.property -> {
                 when (request.headers[LdpHeaders.Headers.Condition.property]) {
@@ -265,7 +291,20 @@ class ServerService(
 
     private fun handleRequestMethodPostCmdAdd(request: LdpRequest): LdpResponse {
         val login = request.headers[LdpHeaders.Headers.USER]!!
+        val password = request.headers[LdpHeaders.Headers.PASSWD]!!.sha256()
+        val isValidUser = try {
+            storageManager.checkPassword(login, password)
+        } catch (e: Exception) {
+            return LdpResponse(
+                LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
+            )
+        }
+        if (!isValidUser) return LdpResponse(
+            LdpOptions.StatusCode.FAIL, body = "Wrong password"
+        )
+        println("all 's right1")
         val obj: MusicBand
+        println("all 's right2")
         try {
             obj = Json.decodeFromString(
                 request.headers[LdpHeaders.Headers.Args.FIRST_ARG]
@@ -291,7 +330,7 @@ class ServerService(
                 } catch (e: Exception) {
                     LdpResponse(
                         LdpOptions.StatusCode.FAIL,
-                        body = "Problem with appending an object to a collection, " + "command failed (${e.message})"
+                        body = "Problem with appending an object to a collection, command failed (${e.message})"
                     )
                 }
             }
@@ -509,7 +548,7 @@ class ServerService(
                             try {
                                 val str = request.headers[LdpHeaders.Headers.Args.FIRST_ARG]
                                 val amount = str?.toInt() ?: throw IOException(
-                                    "Request asks amount of object but header " + "stood for it was not found (amount='$str') "
+                                    "Request asks amount of object but header stood for it was not found (amount='$str') "
                                 )
                                 val objs = storageManager.slice(0 until amount)
                                 return LdpResponse(

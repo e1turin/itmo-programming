@@ -34,6 +34,22 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
     override var timeout: Int = builder.timeout
         private set
     private var address: SocketAddress = InetSocketAddress(this.host, this.port)
+
+    private var login = ""
+    override fun setLogin(login: String) {
+        this.login = login
+
+    }
+    private var password = ""
+    override fun setPassword(password: String) {
+        this.password = password
+    }
+
+    override fun deleteUser() {
+        login = ""
+        password = ""
+    }
+
     private lateinit var datagramChannel: DatagramChannel
     private lateinit var datagramSocket: DatagramSocket
     override val isOpen: Boolean
@@ -106,7 +122,11 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
         if (!this::datagramChannel.isInitialized) {
             throw LdpConnectionException("Connection not established")
         }
-        val req = LdpRequest.newBuilder(request).uri(URI("udp://${host.hostName}:${port}")).build()
+        val req = LdpRequest.newBuilder(request)
+            .uri(URI("udp://${host.hostName}:${port}"))
+            .header(LdpHeaders.Headers.USER, login)
+            .header(LdpHeaders.Headers.PASSWD, password)
+            .build()
         sendRequest(req)
         return receive()
     }
@@ -179,28 +199,6 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
 
     private fun receivePieceOfResponse(): Triple<Int, Int, String>? {
-        /*
-        val selector: Selector = Selector.open()
-        datagramChannel.register(selector, SelectionKey.OP_READ)
-        if (selector.select(timeout) == 0) {
-            return null
-        }
-            for (key in selector.selectedKeys()) {
-                if (key.isReadable) {
-                    val buffer = ByteBuffer.allocate(512) //used only 512
-                    val responseAddress: SocketAddress? = datagramChannel.receive(buffer)
-//        val responseAddress: SocketAddress? = datagramSocket.receive(buffer)
-                    responseAddress?.let {
-                        return extractData(buffer)
-                    }
-
-                }
-
-            }
-         */
-
-
-//        val buffer = ByteBuffer.allocate(512) //used only 512
         var buf = ByteArray(512)
         val datagramPacket = DatagramPacket(buf, 512).apply {
             socketAddress = this@LdpClientImpl.address
@@ -209,14 +207,8 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
             soTimeout = timeout
         }
         socket.receive(datagramPacket)
-//        val responseAddress: SocketAddress? = datagramPacket.socketAddress
-//        val responseAddress: SocketAddress? = datagramSocket.receive(buffer)
-//        responseAddress?.let {
-//            return extractData(buffer)
         val byteBuf = ByteBuffer.wrap(buf, 0, datagramPacket.length)
         return extractData(byteBuf, false)
-//        }
-//        return null
     }
 
     private fun extractData(buffer: ByteBuffer, flip: Boolean = true): Triple<Int, Int, String> {

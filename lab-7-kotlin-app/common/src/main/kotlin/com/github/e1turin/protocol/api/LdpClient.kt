@@ -26,6 +26,9 @@ abstract class LdpClient protected constructor() : AutoCloseable {
     abstract fun disconnect(): Int
     abstract fun send(request: LdpRequest): LdpResponse
     abstract fun receive(): LdpResponse
+    abstract fun setLogin(login: String)
+    abstract fun setPassword(password: String)
+    abstract fun deleteUser()
 
 
     interface Builder {

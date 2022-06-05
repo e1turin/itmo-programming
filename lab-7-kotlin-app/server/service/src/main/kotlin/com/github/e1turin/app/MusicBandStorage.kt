@@ -5,7 +5,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.collections.LinkedHashSet
 
-@kotlinx.serialization.Serializable
+//@kotlinx.serialization.Serializable
 internal open class MusicBandStorage(val name: String = "storage.json") { //TODO: generic
 
     protected val data: LinkedHashSet<MusicBand> = java.util.LinkedHashSet()

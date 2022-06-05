@@ -103,7 +103,7 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         responseAddress?.let { address ->
             println("received from $address")
             sendResponse(
-                LdpResponse(LdpOptions.StatusCode.OK, body = "Success response"),
+                LdpResponse(LdpOptions.StatusCode.OK, body = "Request got successfully"),
                 address
             )
             return extractData(buffer) to address

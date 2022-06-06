@@ -12,6 +12,7 @@ import org.joda.time.DateTime
 import java.io.IOException
 import java.sql.SQLException
 import java.time.Instant
+import javax.xml.crypto.Data
 
 internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     MusicBandStorageManager(musicBandStorage) {
@@ -142,11 +143,9 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     fun getRoleByUserid(id: Int): String {
         val (ex, role) = transaction(db) {
             try {
-                val role = users.join(
-                    roles,
+                val role = users.join(roles,
                     JoinType.INNER,
-                    additionalConstraint = { users.role eq roles.id }
-                ).select {
+                    additionalConstraint = { users.role eq roles.id }).select {
                     users.id eq id
                 }.first()[roles.role]
                 return@transaction null to role
@@ -159,9 +158,7 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     }
 
     @kotlin.jvm.Throws(
-        SQLException::class,
-        ExposedSQLException::class,
-        NoSuchElementException::class
+        SQLException::class, ExposedSQLException::class, NoSuchElementException::class
     )
     fun checkPassword(login: String, checking_password: String): Boolean {
         val (ex, password) = transaction(db) {
@@ -179,18 +176,14 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     }
 
     @kotlin.jvm.Throws(
-        SQLException::class,
-        ExposedSQLException::class,
-        NoSuchElementException::class
+        SQLException::class, ExposedSQLException::class, NoSuchElementException::class
     )
     fun getOwnerLoginByObjId(id: Int): String {
         val (ex, login) = transaction(db) {
             try {
-                val login = musicBands.join(
-                    users,
+                val login = musicBands.join(users,
                     JoinType.INNER,
-                    additionalConstraint = { musicBands.owner eq users.id }
-                ).select {
+                    additionalConstraint = { musicBands.owner eq users.id }).select {
                     musicBands.id eq id
                 }.first()[users.name]
                 return@transaction null to login
@@ -203,20 +196,28 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     }
 
     fun hasPermissionOn(objId: Int, login: String): Boolean {
-        return try {
-            getRoleByUserid(objId) in listOf(
-                login, DatabaseOpts.Roles.admin, DatabaseOpts.Roles.editor
-            )
-        } catch (_: Exception) {
-            false
+        if (getOwnerLoginByObjId(objId) == login) return true
+        else {
+            val (ex, role) = transaction(db) {
+                try {
+                    val role = users.join(roles,
+                        JoinType.INNER,
+                        additionalConstraint = { users.role eq roles.id })
+                        .select { users.name eq login }.first()[roles.role]
+                    return@transaction null to role
+                } catch (e: Exception) {
+                    return@transaction e to null
+                }
+            }
+            return role in arrayOf(DatabaseOpts.Roles.admin, DatabaseOpts.Roles.editor)
         }
     }
 
     fun authoriseNewUser(login: String, encryptedPasswd: String) {
         val ex = transaction(db) {
             try {
-                val roleid = roles.select { roles.role eq DatabaseOpts.Roles.common }.first()[roles
-                    .id]
+                val roleid =
+                    roles.select { roles.role eq DatabaseOpts.Roles.common }.first()[roles.id]
                 users.insert {
                     it[name] = login
                     it[password] = encryptedPasswd
@@ -230,22 +231,21 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
         if (ex != null) throw ex
     }
 
-    fun loadDataFromDatabase() {
+    suspend fun loadDataFromDatabase() {
         val (ex, list) = transaction(db) {
             try {
-                val data = musicBands.selectAll().limit(100).map { it ->
+                val data = musicBands.selectAll().limit(100).map {
                     MusicBand(
-                        it[MusicBandsTable.name],
+                        it[musicBands.name],
                         Coordinates(
-                            it[MusicBandsTable.coord_x],
-                            it[MusicBandsTable.coord_y]
+                            it[musicBands.coord_x], it[musicBands.coord_y]
                         ),
                         4,
-                        it[MusicBandsTable.albums_count],
+                        it[musicBands.albums_count],
                         null,
-                        MusicGenre.valueOf(it[MusicBandsTable.genre]),
-                        Label(it[MusicBandsTable.label])
-                    )
+                        MusicGenre.valueOf(it[musicBands.genre]),
+                        Label(it[musicBands.label])
+                    ).apply { setId(it[musicBands.id].value) }
                 }
                 return@transaction null to data
             } catch (e: Exception) {

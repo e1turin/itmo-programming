@@ -95,9 +95,6 @@ class Client(
                 if (passwd.isBlank()) return LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "Password is empty"
                 )
-                ldpClient.setLogin(login)
-                ldpClient.setPassword(passwd)
-
                 val request = LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
                     .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.auth)
                     .header(LdpHeaders.Headers.USER, login)
@@ -105,14 +102,14 @@ class Client(
                     .build()
 
                 val response = ldpClient.send(request)
-                return if (response.status == LdpOptions.StatusCode.OK) {
+                if (response.status == LdpOptions.StatusCode.OK) {
+                    ldpClient.setLogin(login)
+                    ldpClient.setPassword(passwd)
+
                     username = login
                     password = passwd
-                    LdpResponse(LdpOptions.StatusCode.OK, body = response.body)
-                } else {
-                    ldpClient.deleteUser()
-                    LdpResponse(LdpOptions.StatusCode.FAIL, body = response.body)
                 }
+                return response
             }
             Task.Auth.logout -> {
                 if (username == null) {
@@ -185,6 +182,7 @@ class Client(
                     .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.remove)
                     .header(LdpHeaders.Headers.CONDITION, LdpHeaders.Values.Condition.property)
                     .header(LdpHeaders.Headers.Condition.property, "id")
+                    .header(LdpHeaders.Headers.SECOND_CONDITION, LdpHeaders.Values.Condition.equals)
                     .header("id", id).build()
 
                 return ldpClient.send(request)

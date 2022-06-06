@@ -122,11 +122,17 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
         if (!this::datagramChannel.isInitialized) {
             throw LdpConnectionException("Connection not established")
         }
-        val req = LdpRequest.newBuilder(request)
-            .uri(URI("udp://${host.hostName}:${port}"))
-            .header(LdpHeaders.Headers.USER, login)
-            .header(LdpHeaders.Headers.PASSWD, password)
-            .build()
+        val req: LdpRequest = if (login.isBlank() && password.isBlank()) {
+            LdpRequest.newBuilder(request)
+                .uri(URI("udp://${host.hostName}:${port}"))
+                .build()
+        } else {
+            LdpRequest.newBuilder(request)
+                .uri(URI("udp://${host.hostName}:${port}"))
+                .header(LdpHeaders.Headers.USER, login)
+                .header(LdpHeaders.Headers.PASSWD, password)
+                .build()
+        }
         sendRequest(req)
         return receive()
     }

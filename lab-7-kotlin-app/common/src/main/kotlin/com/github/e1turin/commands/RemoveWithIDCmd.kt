@@ -24,9 +24,9 @@ class RemoveWithIDCmd(cmdName: String) : Command(cmdName) {
             )
         )
         if (response.status == LdpOptions.StatusCode.OK) {
-            io.writeln("Элемент успешно добавлен")
+            io.writeln("Элемент успешно удален")
         } else {
-            io.writeln("Элемент не добавлен")
+            io.writeln("Элемент не удален")
             io.writeln(response.body)
         }
 

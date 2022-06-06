@@ -26,16 +26,16 @@ fun main(args: Array<String>){
         "storage-${Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date}.json"
     }
 
-    val storageFile = File(storageName)
-    try {
-        val resultOfCreation = storageFile.createNewFile()
-        if (resultOfCreation) {
-            ioStream.writeln("Файл хранилища коллекции успешно создан")
-        }
-    } catch (e: IOException) {
-        ioStream.writeln("Произошла ошибка при создании файла. Завершение работы менеджера.")
-        return
-    }
+//    val storageFile = File(storageName)
+//    try {
+//        val resultOfCreation = storageFile.createNewFile()
+//        if (resultOfCreation) {
+//            ioStream.writeln("Файл хранилища коллекции успешно создан")
+//        }
+//    } catch (e: IOException) {
+//        ioStream.writeln("Произошла ошибка при создании файла. Завершение работы менеджера.")
+//        return
+//    }
 
     val service = ServerService(ioStream,localPort, storageName)
     try {

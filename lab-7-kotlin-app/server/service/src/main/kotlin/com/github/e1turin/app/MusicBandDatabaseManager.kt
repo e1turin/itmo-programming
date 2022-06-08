@@ -6,13 +6,11 @@ import com.github.e1turin.database.RolesTable
 import com.github.e1turin.database.UsersTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
 import java.io.IOException
 import java.sql.SQLException
 import java.time.Instant
-import javax.xml.crypto.Data
 
 internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     MusicBandStorageManager(musicBandStorage) {
@@ -29,6 +27,24 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     init {
         transaction(db) {
             SchemaUtils.createMissingTablesAndColumns(users, musicBands, roles)
+            try {
+                roles.insert {
+                    it[this.role] = DatabaseOpts.Roles.common
+                }
+            } catch (e: Exception) {
+            }
+            try {
+                roles.insert {
+                    it[this.role] = DatabaseOpts.Roles.admin
+                }
+            } catch (e: Exception) {
+            }
+            try {
+                roles.insert {
+                    it[this.role] = DatabaseOpts.Roles.editor
+                }
+            } catch (e: Exception) {
+            }
         }
     }
 
@@ -143,7 +159,8 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     fun getRoleByUserid(id: Int): String {
         val (ex, role) = transaction(db) {
             try {
-                val role = users.join(roles,
+                val role = users.join(
+                    roles,
                     JoinType.INNER,
                     additionalConstraint = { users.role eq roles.id }).select {
                     users.id eq id
@@ -181,7 +198,8 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
     fun getOwnerLoginByObjId(id: Int): String {
         val (ex, login) = transaction(db) {
             try {
-                val login = musicBands.join(users,
+                val login = musicBands.join(
+                    users,
                     JoinType.INNER,
                     additionalConstraint = { musicBands.owner eq users.id }).select {
                     musicBands.id eq id
@@ -200,7 +218,8 @@ internal class MusicBandDatabaseManager(musicBandStorage: MusicBandStorage) :
         else {
             val (ex, role) = transaction(db) {
                 try {
-                    val role = users.join(roles,
+                    val role = users.join(
+                        roles,
                         JoinType.INNER,
                         additionalConstraint = { users.role eq roles.id })
                         .select { users.name eq login }.first()[roles.role]

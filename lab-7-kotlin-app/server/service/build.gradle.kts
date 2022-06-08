@@ -28,6 +28,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jodatime:0.38.2")
     implementation("org.postgresql","postgresql", "42.3.4")
     implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("org.apache.logging.log4j:log4j-api:2.17.2")
+    implementation("org.apache.logging.log4j:log4j-core:2.17.2")
 }
 
 //tasks.test {
@@ -58,10 +60,10 @@ application {
 }
 
 tasks.jar {
-    archiveBaseName.set("Server-service")
-    archiveVersion.set("3.0")
+    archiveBaseName.set("Server-service-async")
+    archiveVersion.set("4.0")
     manifest {
-        attributes["Main-Class"] = "MainServerServiceKt"
+        attributes["Main-Class"] = ".MainServerServiceKt"
     }
 
     configurations["compileClasspath"].forEach { file: File -> //zip files to .jar

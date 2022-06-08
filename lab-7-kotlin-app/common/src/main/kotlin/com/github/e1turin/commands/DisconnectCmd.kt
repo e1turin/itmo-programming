@@ -20,10 +20,10 @@ class DisconnectCmd(cmdName: String) :
         )
         io.write("Соединение разорвано ")
         if (response.status == LdpOptions.StatusCode.OK){
-            io.writeln("(успешно)")
+            io.writeln("(с ответом от сервера)")
         } else {
 //            io.writeln("Соединение не разорвано")
-            io.writeln("(не успешно)")
+            io.writeln("(без ответа от сервера)")
             io.writeln(response.body)
         }
 

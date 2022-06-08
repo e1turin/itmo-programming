@@ -7,7 +7,7 @@ class LogoutCmd(cmdName: String) : Command(cmdName) {
     override var description: String = "Выйти из системы"
     override fun execute(arg: String, respondent: Manager): Int {
         val io = respondent.stdio
-        io.writeln("ВХОД В СИСТЕМУ")
+        io.writeln("ВЫХОД ИЗ СИСТЕМЫ")
         val response = respondent.request(
             Manager.Method.AUTH,
             mapOf(

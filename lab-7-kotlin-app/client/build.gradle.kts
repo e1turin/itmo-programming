@@ -43,8 +43,8 @@ application {
 }
 
 tasks.jar {
-    archiveBaseName.set("Client-app")
-    archiveVersion.set("3.0")
+    archiveBaseName.set("Client-app-s")
+    archiveVersion.set("4.0")
     manifest {
         attributes["Main-Class"] = "com.github.e1turin.MainClientKt"
     }

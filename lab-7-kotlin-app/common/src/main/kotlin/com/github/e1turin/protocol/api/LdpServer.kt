@@ -12,9 +12,10 @@ abstract class LdpServer protected constructor(): AutoCloseable {
         }
     }
 
-    abstract fun send(response: LdpResponse, address: SocketAddress): LdpResponse?
-    abstract fun receiveRequest(): Pair<LdpRequest, SocketAddress>?
-    abstract fun start()
+    abstract suspend fun start()
+    abstract suspend fun send(response: LdpResponse, address: SocketAddress): LdpResponse?
+    abstract suspend fun receiveRequest(): Pair<LdpRequest, SocketAddress>?
+    abstract suspend fun receiveResponse(): LdpResponse
 
     interface Builder {
         fun build(): LdpServer
@@ -29,5 +30,4 @@ abstract class LdpServer protected constructor(): AutoCloseable {
         fun authorise(login: String, password: String): Builder
     }
 
-    abstract fun receiveResponse(): LdpResponse
 }

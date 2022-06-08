@@ -10,7 +10,7 @@ class RemoveWithIDCmd(cmdName: String) : Command(cmdName) {
     override fun execute(arg: String, respondent: Manager): Int {
         val io = respondent.stdio
 
-        io.writeln("УДАЛЕНИЕ ЭЛЕМЕНТА В КОЛЛЕКЦИЮ")
+        io.writeln("УДАЛЕНИЕ ЭЛЕМЕНТА ИЗ КОЛЛЕКЦИИ")
         val id = io.termInput(sep = "id=", message = "введите id",
             query = { io.readLineIntOrNull() }
         )

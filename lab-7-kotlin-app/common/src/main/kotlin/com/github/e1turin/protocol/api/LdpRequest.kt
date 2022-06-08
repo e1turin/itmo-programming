@@ -43,7 +43,7 @@ abstract class LdpRequest protected constructor() {
         }
 
         fun deserialize(data: String): LdpRequest {
-            println("deserialize req: '$data'")
+//            println("deserialize req: '$data'")
             return Json.decodeFromString<LdpRequestImmutableImpl>(data)
             /*
             return LdpRequest.newBuilder()

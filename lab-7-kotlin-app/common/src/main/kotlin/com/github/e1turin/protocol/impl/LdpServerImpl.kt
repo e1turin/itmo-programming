@@ -5,11 +5,9 @@ import com.github.e1turin.protocol.api.LdpRequest
 import com.github.e1turin.protocol.api.LdpResponse
 import com.github.e1turin.protocol.api.LdpServer
 import com.github.e1turin.protocol.exceptions.LdpConnectionException
-import java.net.BindException
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.ServerSocket
-import java.net.SocketAddress
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import java.net.*
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 
@@ -33,6 +31,7 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         private set
     private lateinit var datagramChannel: DatagramChannel
     private val connections = mutableMapOf<SocketAddress, MutableMap<Int, String>>()
+    private val requestChannel = Channel<Pair<LdpRequest, SocketAddress>>()
 
     init {
         this.localPort = builder.localPort
@@ -40,15 +39,22 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         println("hostname: $localHost")
     }
 
-    override fun start() {
+    override suspend fun start(): Unit = coroutineScope {
         try {
-            this.datagramChannel = bindChannel(localPort)
+            datagramChannel = bindChannel(localPort)
             println("Using port 35047")
         } catch (e: BindException) {
-            localPort = ServerSocket(0).localPort
-            this.datagramChannel = bindChannel(localPort)
+            localPort = withContext(Dispatchers.IO) {
+                ServerSocket(0).localPort
+            }
+            datagramChannel = bindChannel(localPort)
             println("Port 35047 is not free, using port: $localPort")
         }
+
+        launch(Dispatchers.IO) {
+            receiveRequestLoop()
+        }
+
     }
 
     private fun bindChannel(port: Int): DatagramChannel {
@@ -62,43 +68,55 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         return datagramChannel
     }
 
-    override fun receiveRequest(): Pair<LdpRequest, SocketAddress>? {
-        var data = ""
+    override suspend fun receiveRequest(): Pair<LdpRequest, SocketAddress> {
+        return requestChannel.receive()
+    }
+
+    private suspend fun receiveRequestLoop() = coroutineScope {
         var num: Int = 0
         var amount: Int = 1
         var dataPart: String = ""
         var address: SocketAddress? = null
-        while (true) {
+        while (isActive) {
             val res = receivePieceOfRequest() ?: continue
             val numAmountData = res.first
             num = numAmountData.first
             amount = numAmountData.second
-            dataPart += numAmountData.third
+//            dataPart += numAmountData.third
             address = res.second
             if (connections[address] == null) {
                 connections[address] = mutableMapOf()
             }
-            connections[address]!![num] = dataPart
+            connections[address]!![num] = numAmountData.third
             if ((connections[address]?.size ?: -1) == amount) {
-                break //todo: place to concurrent processing,
+                launch(Dispatchers.Default) {
+                    collectRequest(address)
+                }
             }
         }
-        //todo: extract outside of loop to method `processRequest()`
-        val dataParts = connections[address]?.values
-        if (address == null || dataParts == null) {
-            return null
-        }
+    }
+
+    private suspend fun collectRequest(address: SocketAddress) {
+        val dataParts = connections[address]?.values?.toList() ?: return
+        connections[address]?.clear() //TODO: timeout to clear connections
+        var data = ""
         for (dt in dataParts) {
             data += dt
         }
 //        connections.remove(address)
-        connections[address]?.clear() //TODO: timeout to clear connections
-        return LdpRequest.deserialize(data.trim()) to address
+        try {
+            requestChannel.send(LdpRequest.deserialize(data.trim()) to address)
+        } catch (e: Exception){
+            e.printStackTrace()
+        }
     }
 
-    private fun receivePieceOfRequest(): Pair<Triple<Int, Int, String>, SocketAddress>? {
-        val buffer = ByteBuffer.allocate(512) //used only 512
-        val responseAddress: SocketAddress? = datagramChannel.receive(buffer)
+    private suspend fun receivePieceOfRequest(): Pair<Triple<Int, Int, String>, SocketAddress>? {
+        val buffer = ByteBuffer.allocate(512)
+        val responseAddress: SocketAddress? =
+            withContext(Dispatchers.IO) {
+                datagramChannel.receive(buffer)
+            }
 
         responseAddress?.let { address ->
             println("received from $address")
@@ -111,26 +129,27 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         return null
     }
 
-    override fun send(response: LdpResponse, address: SocketAddress): LdpResponse? {
-        if (!this::datagramChannel.isInitialized) {
-            throw LdpConnectionException("Connection not established")
-        }
-        //TODO:verifying response
+    override suspend fun send(response: LdpResponse, address: SocketAddress): LdpResponse? =
+        coroutineScope {
+            if (!this@LdpServerImpl::datagramChannel.isInitialized) {
+                throw LdpConnectionException("Connection not established")
+            }
+            //TODO:verifying response
 //        val response = LdpResponse(LdpOptions.StatusCode.OK)
-        sendResponse(response, address)
+            sendResponse(response, address)
 //        return receiveResponse()
-        return null
-    }
-
-    private fun sendResponse(response: LdpResponse, address: SocketAddress) {
-        val packets = subdivideToPackets(response.serialize())
-        for (packet in packets) {
-            val result: Boolean = sendPacket(packet, address)
+            return@coroutineScope null
         }
-    }
 
-    override fun receiveResponse(): LdpResponse {
-        //TODO: ######## TIMEOUT!!! #########
+    private suspend fun sendResponse(response: LdpResponse, address: SocketAddress) =
+        coroutineScope {
+            val packets = subdivideToPackets(response.serialize())
+            for (packet in packets) {
+                val result: Boolean = sendPacket(packet, address)
+            }
+        }
+
+    override suspend fun receiveResponse(): LdpResponse = coroutineScope{
         var data = ""
         var num: Int = 0
         var amount: Int = 1
@@ -146,12 +165,15 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
             }
         } while (num < amount)
         println("deserialized resp: $data")
-        return LdpResponse.deserialize(data.trim())
+        return@coroutineScope LdpResponse.deserialize(data.trim())
     }
 
-    private fun receivePieceOfResponse(): Triple<Int, Int, String>? {
+    private suspend fun receivePieceOfResponse(): Triple<Int, Int, String>? {
         val buffer = ByteBuffer.allocate(512) //used only 512
-        val responseAddress: SocketAddress? = datagramChannel.receive(buffer)
+        val responseAddress: SocketAddress? =
+            withContext(Dispatchers.IO) {
+                datagramChannel.receive(buffer)
+            }
         responseAddress?.let {
             //TODO: SocketAddress return?
             return extractData(buffer)
@@ -160,7 +182,7 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
     }
 
 
-    private fun subdivideToPackets(data: String): Array<ByteArray> {
+    private suspend fun subdivideToPackets(data: String): Array<ByteArray> {
         var buffers = arrayOf<ByteArray>()
         val byteData = data.toByteArray().asList().chunked(510)
 //        assert(byteData.size < 1L shl 16 - 1) todo: more bytes for amount
@@ -174,10 +196,12 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         return buffers
     }
 
-    private fun sendPacket(packet: ByteArray, address: SocketAddress): Boolean {
+    private suspend fun sendPacket(packet: ByteArray, address: SocketAddress): Boolean {
         val bufferedData = ByteBuffer.wrap(packet)
         try {
-            datagramChannel.send(bufferedData, address)
+            withContext(Dispatchers.IO) {
+                datagramChannel.send(bufferedData, address)
+            }
         } catch (e: Exception) {
             println("datagramChannel problem")
             throw e
@@ -187,7 +211,7 @@ internal class LdpServerImpl(builder: Builder) : LdpServer() {
         return LdpOptions.StatusCode.OK == LdpOptions.StatusCode.OK
     }
 
-    private fun extractData(buffer: ByteBuffer): Triple<Int, Int, String> {
+    private suspend fun extractData(buffer: ByteBuffer): Triple<Int, Int, String> {
 //        (buffer as Buffer).flip()// crutch for java 11+ -> java 8
         buffer.flip()
         val bytes = buffer.array().take(buffer.remaining())

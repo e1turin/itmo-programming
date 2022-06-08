@@ -90,14 +90,20 @@ internal class LdpClientImpl(builder: Builder) : LdpClient() {
 
     override fun disconnect(): Int {
         if (this::datagramChannel.isInitialized && this.datagramChannel.isOpen) {
-            val responseStatus = sendRequest(
-                LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
-                    .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.disconnect).build()
-            )
-            close()
+            try {
+                val responseStatus = sendRequest(
+                    LdpRequest.newBuilder().method(LdpRequest.METHOD.GET)
+                        .header(LdpHeaders.Headers.CMD_NAME, LdpHeaders.Values.Cmd.disconnect)
+                        .build()
+                )
+                close()
+                return responseStatus
+            } catch (e: Exception) {
+                close()
+                throw e
+            }
 //            if (response == LdpOptions.StatusCode.OK) {
 //            }
-            return responseStatus
 //            LdpOptions.StatusCode.OK
             //TODO:connect // request
         } else {

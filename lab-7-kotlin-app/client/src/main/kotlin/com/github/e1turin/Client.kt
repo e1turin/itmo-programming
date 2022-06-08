@@ -77,8 +77,6 @@ class Client(
     private fun handleMethodAuth(args: Map<String, Any>): LdpResponse {
         when (args[Opt.`do`] ?: "No task") {
             Task.Auth.login -> {
-                println("currlogin $username")
-                println("currpass $password")
                 if (this.username != null) return LdpResponse(
                     LdpOptions.StatusCode.FAIL,
                     body = "User already logged in, you should log out before"

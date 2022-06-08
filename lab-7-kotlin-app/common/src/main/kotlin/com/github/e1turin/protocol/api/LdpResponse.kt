@@ -25,13 +25,13 @@ data class LdpResponse(
 
     fun serialize(): String {
         val str = Json.encodeToString(this)
-        println("serialize resp: '$str'")
+//        println("serialize resp: '$str'")
         return str
     }
 
     companion object{
         fun deserialize(data: String): LdpResponse {
-            println("deserialize resp: '$data'")
+//            println("deserialize resp: '$data'")
             return Json.decodeFromString(data)
 
 //            return LdpResponse(LdpOptions.StatusCode.OK, body = "TODO deserialize Response")

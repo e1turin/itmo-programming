@@ -9,9 +9,9 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.net.SocketAddress
-import kotlin.text.toIntOrNull
 
 class ServerService(
     val stdio: IOStream, val localPort: Int, storageName: String
@@ -19,12 +19,14 @@ class ServerService(
     private var WORK = true
     private val ldpServer = LdpServer.newBuilder().localPort(localPort).build()
     private val storageManager = MusicBandDatabaseManager(MusicBandStorage(storageName))
+    private val log = LogManager.getLogger(ServerService::class.java.name)
 
     private val clients = mutableSetOf<SocketAddress>()
 
-    fun start(args: Array<String>) {
+    fun start(args: Array<String>) = runBlocking {
         ldpServer.use {
-            it.start()
+            launch { it.start() }
+            log.info("Server started")
             loop()
         }
     }
@@ -34,18 +36,20 @@ class ServerService(
 //        storageManager.saveDataTo(File(storageManager.storeName))
     }
 
-    private fun loop() = runBlocking {
+    private suspend fun loop() = coroutineScope {
         storageManager.loadDataFromDatabase()
-        while (WORK) {
-            stdio.writeln("Is waiting request...")
+        while (WORK && isActive) {
+            log.info("Is waiting request...")
             val (request, address) = ldpServer.receiveRequest() ?: continue
             async(Dispatchers.IO) {
                 val response: LdpResponse = try {
                     handleRequest(request, address)
                 } catch (e: Exception) {
+                    log.error(e.message)
+                    e.printStackTrace()
                     LdpResponse(
                         LdpOptions.StatusCode.FAIL,
-                        body = "Error while handling request: ${e.message}"
+                        body = "Error while handling request: ${e}"
                     )
                 }
                 ldpServer.send(response, address)
@@ -58,6 +62,7 @@ class ServerService(
             LdpRequest.METHOD.GET -> handleRequestMethodGet(request, address)
             LdpRequest.METHOD.POST -> handleRequestMethodPost(request, address)
             else -> {
+                log.warn("Wrong method")
                 LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "Wrong method used"
                 )
@@ -70,11 +75,11 @@ class ServerService(
     ): LdpResponse = coroutineScope {
         val login = request.headers[LdpHeaders.Headers.USER] ?: return@coroutineScope LdpResponse(
             LdpOptions.StatusCode.FAIL, body = "No login get user"
-        )
+        ).also { log.warn("No name for user from address $address") }
         val password = request.headers[LdpHeaders.Headers.PASSWD]?.sha256()
             ?: return@coroutineScope LdpResponse(
                 LdpOptions.StatusCode.FAIL, body = "Password is required but got no such one"
-            )
+            ).also { log.warn("No password for user from address $address") }
         return@coroutineScope when (request.headers[LdpHeaders.Headers.CMD_NAME]) {
             LdpHeaders.Values.Cmd.add -> handleRequestMethodPostCmdAdd(request)
 
@@ -86,17 +91,18 @@ class ServerService(
                 if (login.isBlank()) return@coroutineScope LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "empty login"
                 )
-                val isValidUser = try {
+                val isValidUser =
                     async(Dispatchers.IO) {
-                        storageManager.checkPassword(login, password)
+                        try {
+                            storageManager.checkPassword(login, password)
+                        } catch (e: Exception) {
+                            log.error("Exception while checking password (${e.message})")
+                            false
+                        }
                     }.await()
-                } catch (_: Exception) {
-                    false
-                }
                 if (isValidUser) return@coroutineScope LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "User already authorised"
                 )
-                println("user not valid -ok")
                 return@coroutineScope try {
                     async(Dispatchers.IO) {
                         storageManager.authoriseNewUser(login, password)
@@ -110,7 +116,7 @@ class ServerService(
             else -> {
                 LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "Got wrong command for method POST"
-                )
+                ).also { log.warn("Wrong command for method POST from address $address") }
             }
         }
     }
@@ -126,7 +132,7 @@ class ServerService(
             } catch (e: Exception) {
                 return@coroutineScope LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
-                )
+                ).also { log.error("Exception in authentication (${e.message})") }
             }
             if (!isValidUser) return@coroutineScope LdpResponse(
                 LdpOptions.StatusCode.FAIL, body = "Wrong password"
@@ -155,7 +161,11 @@ class ServerService(
                                         return@coroutineScope LdpResponse(
                                             LdpOptions.StatusCode.FAIL,
                                             body = "Problem with decoding an object (${e.message})"
-                                        )
+                                        ).also {
+                                            log.error(
+                                                "Exception while decoding object for update"
+                                            )
+                                        }
                                     }
                                     return@coroutineScope if (async {
                                             storageManager.hasPermissionOn(id, login)
@@ -181,15 +191,17 @@ class ServerService(
                             else -> return@coroutineScope LdpResponse(
                                 LdpOptions.StatusCode.FAIL,
                                 body = "Not implemented method:get condition:property:... request"
-                            )
+                            ).also { log.warn("Not implemented method:get condition:property:... request") }
                         }
                         else -> return@coroutineScope LdpResponse(
                             LdpOptions.StatusCode.FAIL,
                             body = "Not implemented method:post:update condition:property request"
-                        )
+                        ).also { log.warn("Not implemented method:post:update condition:property request") }
                     }
                 }
-                else -> TODO()
+                else -> return@coroutineScope LdpResponse(
+                    LdpOptions.StatusCode.FAIL, body = "Condition not implemented"
+                ).also { log.warn("Cmd update condition not implemented") }
             }
         }
 
@@ -204,7 +216,7 @@ class ServerService(
             } catch (e: Exception) {
                 return@coroutineScope LdpResponse(
                     LdpOptions.StatusCode.FAIL, body = "Error in authentication (${e.message})"
-                )
+                ).also {log.warn("Exception while checking password for user")}
             }
             if (!isValidUser) return@coroutineScope LdpResponse(
                 LdpOptions.StatusCode.FAIL, body = "Wrong password"
@@ -247,12 +259,12 @@ class ServerService(
                             else -> return@coroutineScope LdpResponse(
                                 LdpOptions.StatusCode.FAIL,
                                 body = "Not implemented method:get condition:property:... request"
-                            )
+                            ).also {log.warn("Not implemented method GET condition")}
                         }
                         else -> return@coroutineScope LdpResponse(
                             LdpOptions.StatusCode.FAIL,
                             body = "Not implemented method:get condition:property request"
-                        )
+                        ).also {log.warn("Not implemented method GET condition property")}
                     }
                 }
                 LdpHeaders.Values.Condition.none -> when (LdpHeaders.Headers.Condition.none) {
@@ -269,7 +281,8 @@ class ServerService(
                             return@coroutineScope LdpResponse(
                                 LdpOptions.StatusCode.FAIL,
                                 body = "Problem with decoding a collection object (${e.message})"
-                            )
+                            ).also {log.error("Exception while decoding object for cmd remove " +
+                                    "(${e.message})") }
                         }
                         val id = storageManager.find { it == obj }?.id
                             ?: return@coroutineScope LdpResponse(
@@ -306,7 +319,7 @@ class ServerService(
                             }.await()
                             return@coroutineScope LdpResponse(
                                 LdpOptions.StatusCode.OK, body = "Collection successfully cleared"
-                            )
+                            ).also {log.info("Collection cleared")}
                         }
                         val amount = amountStr.trim().toIntOrNull()
                         TODO("TODO: post cmd:clear cond:none:amount Int handler")
@@ -317,7 +330,8 @@ class ServerService(
                     )
 
                 }
-                else -> TODO("TODO: post cmd:clear cond handler")
+                else -> return@coroutineScope LdpResponse(LdpOptions.StatusCode.FAIL,
+                body = "Not implemented condition for cmd remove")
             }
         }
 
